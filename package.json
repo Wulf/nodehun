@@ -1,0 +1,20 @@
+{
+  "name": "nodehun",
+  "version": "0.0.1",
+  "description": "The hunspell binding to nodejs that exposes most of hunspells api.",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "var nodehun = require('nodehun');"
+  },
+  "repository": "",
+  "keywords": [
+    "['hunspell'",
+    "'spellcheck'",
+    "'spell']"
+  ],
+  "author": "Nathan Sweet",
+  "license": "MIT"
+}
