@@ -1,0 +1,9 @@
+argv = ['/usr/local/bin/node-waf', 'configure']
+blddir = '/Users/nathansweet/Desktop/WebProjects/nodehun/nodehun/src/build'
+commands = {'dist': 0, 'configure': True, 'distcheck': 0, 'install': 0, 'build': 0, 'clean': 0, 'distclean': 0, 'check': 0, 'uninstall': 0}
+cwd = '/Users/nathansweet/Desktop/WebProjects/nodehun/nodehun/src'
+environ = {'SSH_AUTH_SOCK': '/tmp/launch-be6BbC/Listeners', 'VERSIONER_PYTHON_PREFER_32_BIT': 'no', 'TERM_PROGRAM_VERSION': '273.1', 'COM_GOOGLE_CHROME_FRAMEWORK_SERVICE_PROCESS/USERS/NATHANSWEET/LIBRARY/APPLICATION_SUPPORT/GOOGLE/CHROME_SOCKET': '/tmp/launch-UzjdNd/ServiceProcessSocket', 'SHELL': '/bin/bash', 'LOGNAME': 'nathansweet', 'USER': 'nathansweet', 'HOME': '/Users/nathansweet', 'PATH': '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/local/git/bin:/usr/X11/bin', 'DISPLAY': '/tmp/launch-bLFpIX/org.x:0', 'TMPDIR': '/var/folders/gE/gEoy6L1wFpC4p4njuU7b0k+++TI/-Tmp-/', 'TERM_PROGRAM': 'Apple_Terminal', 'LANG': 'en_US.UTF-8', 'TERM': 'xterm-color', 'Apple_PubSub_Socket_Render': '/tmp/launch-RE2ASm/Render', 'VERSIONER_PYTHON_VERSION': '2.6', 'SHLVL': '1', 'OLDPWD': '/Users/nathansweet/Desktop/WebProjects/nodehun/nodehun', '__CF_USER_TEXT_ENCODING': '0x1F5:0:0', 'PWD': '/Users/nathansweet/Desktop/WebProjects/nodehun/nodehun/src', '_': '/usr/local/bin/node-waf', 'COMMAND_MODE': 'unix2003'}
+files = []
+hash = 0
+options = {'compile_targets': None, 'force': False, 'verbose': 0, 'nocache': False, 'progress_bar': 0, 'destdir': '', 'keep': False, 'zones': '', 'blddir': '', 'prefix': '/usr/local/', 'jobs': 2, 'srcdir': '', 'check_cxx_compiler': 'g++'}
+srcdir = '/Users/nathansweet/Desktop/WebProjects/nodehun/nodehun/src'
