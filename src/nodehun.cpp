@@ -55,7 +55,6 @@ void SpellDictionary::Init(Handle<Object> target) {
 	
 	target->Set(name, constructor->GetFunction());
 }
-
 SpellDictionary::SpellDictionary(const char *language){
 	std::string path, affPath, dicPath;
 	path.append(_dictionariesPath);
