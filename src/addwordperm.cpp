@@ -21,6 +21,7 @@ struct WordsData {
 	uv_fs_t close_req;
 	std::string error;
 	std::string file;
+	uv_thread_t thread_id;
 	int fileSize;
 	char * buffer;
 };
@@ -103,7 +104,6 @@ int AddWordsComp(WordsData * wordsData,std::string item, int i){
 
 void AddWordsPermRead(uv_fs_t *read_req) {
 	WordsData* wordsData = static_cast<WordsData*>(read_req->data);
-	uv_err_t error = uv_last_error(uv_default_loop());
 	
 	if(read_req->result == -1){
 		wordsData->error.append("Error reading dictionary.");
@@ -244,6 +244,7 @@ void AddWordsPermFinish(uv_async_t *async, int status) {
 		wordsData->callback.Dispose();
 	}
 	uv_close((uv_handle_t*) async, NULL);
+	uv_thread_join(&wordsData->thread_id);
 	delete wordsData;
 }
 
@@ -301,10 +302,9 @@ Handle<Value> AddWordsPermanently(const Arguments& args){
 	}
 	wordsData->numWords = arrL;
 	wordsData->async.data = wordsData;
-	uv_thread_t thread_id;
 	
 	uv_async_init(uv_default_loop(), &wordsData->async, AddWordsPermFinish);
-	uv_thread_create(&thread_id, AddWordsPermWork, (void *)&wordsData->async);
+	uv_thread_create(&wordsData->thread_id, AddWordsPermWork, (void *)&wordsData->async);
 	
 	return Undefined();
 }
