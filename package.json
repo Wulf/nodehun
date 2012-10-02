@@ -1,0 +1,23 @@
+{
+  "name": "nodehun",
+  "version": "0.0.1",
+  "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features.",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathanjsweet/nodehun.git"
+  },
+  "keywords": [
+    "spellcheck",
+    "spell",
+    "hunspell"
+  ],
+  "author": "Nathan Sweet",
+  "license": "MIT"
+}
