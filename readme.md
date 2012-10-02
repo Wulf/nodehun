@@ -6,6 +6,9 @@ Installation
 Nodehun has no "node_module" dependencies (yet), so it can either be installed via npm or simply checked out of git. You'll need [node-gyp](https://github.com/TooTallNate/node-gyp) to build. Nodehun should work on Windows or Unix.
 	
 	npm install nodehun
+	cd src
+	node-gyp configure
+	node-gyp build
 	
 
 Introduction
