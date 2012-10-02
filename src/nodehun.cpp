@@ -1,21 +1,40 @@
+/*Copyright (c) 2012 Nathan Sweet, DataSphere Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the 
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 #include <uv.h>
 #include <node.h>
 #include <string>
 #include <hunspell.hxx>
-#include "nodehun.hpp"
-
 #ifdef _WIN32
 #define __SLASH__ "\\"
 #else
 #define __SLASH__ "/"
 #endif
+#include "nodehun.hpp"
+#include "addwordperm.cpp"
+
 
 using namespace v8;
-Persistent<FunctionTemplate> SpellDictionary::constructor;
-std::string _dictionariesPath;
+Persistent<FunctionTemplate> Nodehun::SpellDictionary::constructor;
 
-
-bool dictionaryDirectoryExists(const char *file){
+bool Nodehun::dictionaryDirectoryExists(const char *file){
 	static uv_loop_t* loop = uv_default_loop();
 	uv_fs_t open_req;
 	uv_fs_t close_req;
@@ -37,7 +56,7 @@ bool dictionaryDirectoryExists(const char *file){
 	return true;
 }
 
-void SpellDictionary::Init(Handle<Object> target) {
+void Nodehun::SpellDictionary::Init(Handle<Object> target) {
 	HandleScope scope;
 
 	Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
@@ -55,9 +74,10 @@ void SpellDictionary::Init(Handle<Object> target) {
 	
 	target->Set(name, constructor->GetFunction());
 }
-SpellDictionary::SpellDictionary(const char *language){
+
+Nodehun::SpellDictionary::SpellDictionary(const char *language){
 	std::string path, affPath, dicPath;
-	path.append(_dictionariesPath);
+	path.append(Nodehun::_dictionariesPath);
 	path.append(language);
 	path.append(__SLASH__);
 	path.append(language);
@@ -67,13 +87,13 @@ SpellDictionary::SpellDictionary(const char *language){
 	affPath.append(".aff");
 	dicPath.append(".dic");
 
-	pathsExist = dictionaryDirectoryExists(affPath.c_str()) && dictionaryDirectoryExists(dicPath.c_str());
+	pathsExist = Nodehun::dictionaryDirectoryExists(affPath.c_str()) && Nodehun::dictionaryDirectoryExists(dicPath.c_str());
 	if(pathsExist){
 		spellClass = new Hunspell(affPath.c_str(), dicPath.c_str());
 	}
 }
 
-Handle<Value> SpellDictionary::New(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args) {
 	HandleScope scope;
 
 	if (!args.IsConstructCall()) {
@@ -86,7 +106,7 @@ Handle<Value> SpellDictionary::New(const Arguments& args) {
 	}
 
 	String::Utf8Value arg0(args[0]->ToString());
-	SpellDictionary* obj = new SpellDictionary(*arg0);
+	Nodehun::SpellDictionary* obj = new Nodehun::SpellDictionary(*arg0);
 	
 	if(!obj->pathsExist){
 		return ThrowException(Exception::TypeError(
@@ -98,19 +118,7 @@ Handle<Value> SpellDictionary::New(const Arguments& args) {
 	return args.This();
 }
 
-struct SpellData {
-	uv_work_t request;
-	Persistent<Function> callback;
-
-	std::string word;
-	bool multiple;
-	Hunspell *spellClass;
-	bool wordCorrect;
-	char **suggestions;
-	int numSuggest;
-};
-
-Handle<Value> SpellDictionary::spellSuggest(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::spellSuggest(const Arguments& args) {
 	HandleScope scope;
 	if (args.Length() < 2) {
 		return ThrowException(Exception::TypeError(
@@ -124,12 +132,12 @@ Handle<Value> SpellDictionary::spellSuggest(const Arguments& args) {
 		return ThrowException(Exception::TypeError(
 		String::New("Second argument must be a function.")));
 	}
-	SpellDictionary* obj = ObjectWrap::Unwrap<SpellDictionary>(args.This());
+	Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
 	
 	String::Utf8Value arg0(args[0]->ToString());
 	Local<Function> callback = Local<Function>::Cast(args[1]);
 
-	SpellData* spellData = new SpellData();
+	Nodehun::SpellData* spellData = new Nodehun::SpellData();
 	spellData->request.data = spellData;
 	spellData->callback = Persistent<Function>::New(callback);
 	spellData->word.append(*arg0);
@@ -137,11 +145,11 @@ Handle<Value> SpellDictionary::spellSuggest(const Arguments& args) {
 	spellData->spellClass = obj->spellClass;
 	spellData->multiple = false;
 	uv_queue_work(uv_default_loop(), &spellData->request,
-					SpellDictionary::CheckSuggestions, SpellDictionary::SendSuggestions);
+					Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
 	return Undefined();
 }
 
-Handle<Value> SpellDictionary::spellSuggestions(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) {
 	HandleScope scope;
 	if (args.Length() < 2) {
 		return ThrowException(Exception::TypeError(
@@ -155,12 +163,12 @@ Handle<Value> SpellDictionary::spellSuggestions(const Arguments& args) {
 		return ThrowException(Exception::TypeError(
 		String::New("Second argument must be a function.")));
 	}
-	SpellDictionary* obj = ObjectWrap::Unwrap<SpellDictionary>(args.This());
+	Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
 	
 	String::Utf8Value arg0(args[0]->ToString());
 	Local<Function> callback = Local<Function>::Cast(args[1]);
 
-	SpellData* spellData = new SpellData();
+	Nodehun::SpellData* spellData = new Nodehun::SpellData();
 	spellData->request.data = spellData;
 	spellData->callback = Persistent<Function>::New(callback);
 	spellData->word.append(*arg0);
@@ -169,12 +177,12 @@ Handle<Value> SpellDictionary::spellSuggestions(const Arguments& args) {
 	spellData->spellClass = obj->spellClass;
 	spellData->multiple = true;
 	uv_queue_work(uv_default_loop(), &spellData->request,
-					SpellDictionary::CheckSuggestions, SpellDictionary::SendSuggestions);
+					Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
 	return Undefined();
 }
 
-void SpellDictionary::CheckSuggestions(uv_work_t* request) {
-	SpellData* spellData = static_cast<SpellData*>(request->data);
+void Nodehun::SpellDictionary::CheckSuggestions(uv_work_t* request) {
+	Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
 
 	spellData->wordCorrect = spellData->spellClass->spell(spellData->word.c_str());
 	if (!spellData->wordCorrect){
@@ -182,9 +190,9 @@ void SpellDictionary::CheckSuggestions(uv_work_t* request) {
 	}
 }
 
-void SpellDictionary::SendSuggestions(uv_work_t* request){
+void Nodehun::SpellDictionary::SendSuggestions(uv_work_t* request){
 	HandleScope scope;
-	SpellData* spellData = static_cast<SpellData*>(request->data);
+	Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
 	
 	const unsigned argc = 2;
 	Local<Value> argv[argc];
@@ -218,24 +226,14 @@ void SpellDictionary::SendSuggestions(uv_work_t* request){
 	delete spellData;
 }
 
-struct DictData {
-	uv_work_t request;
-	Persistent<Function> callback;
-	bool callbackExists;
-	std::string path;
-	std::string dict;
-	bool success;
-	Hunspell *spellClass;
-};
-
-Handle<Value> SpellDictionary::addDictionary(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
 	HandleScope scope;
 	if (args.Length() < 1 || !args[0]->IsString()) {
 		return ThrowException(Exception::TypeError(
 		String::New("First argument must be a string.")));
 	}
-	SpellDictionary* obj = ObjectWrap::Unwrap<SpellDictionary>(args.This());
-	DictData* dictData = new DictData();
+	Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+	Nodehun::DictData* dictData = new Nodehun::DictData();
 	String::Utf8Value arg0(args[0]->ToString());
 	if(args.Length() > 1 && args[1]->IsFunction()){
 		Local<Function> callback = Local<Function>::Cast(args[1]);
@@ -246,7 +244,7 @@ Handle<Value> SpellDictionary::addDictionary(const Arguments& args) {
 		dictData->callbackExists = false;
 	}
 	
-	dictData->path.append(_dictionariesPath);
+	dictData->path.append(Nodehun::_dictionariesPath);
 	dictData->path.append(*arg0);
 	dictData->path.append(__SLASH__);
 	dictData->path.append(*arg0);
@@ -257,15 +255,15 @@ Handle<Value> SpellDictionary::addDictionary(const Arguments& args) {
 	dictData->request.data = dictData;
 	
 	uv_queue_work(uv_default_loop(), &dictData->request,
-					SpellDictionary::addDictionaryWork, SpellDictionary::addDictionaryFinish);
+					Nodehun::SpellDictionary::addDictionaryWork, Nodehun::SpellDictionary::addDictionaryFinish);
 	return Undefined();
 
 }
 
-void SpellDictionary::addDictionaryWork(uv_work_t* request){
-	DictData* dictData = static_cast<DictData*>(request->data);
+void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request){
+	Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
 	
-	if(!dictionaryDirectoryExists(dictData->path.c_str())){
+	if(!Nodehun::dictionaryDirectoryExists(dictData->path.c_str())){
 		dictData->success = false;
 	}
 	else{
@@ -275,9 +273,9 @@ void SpellDictionary::addDictionaryWork(uv_work_t* request){
 	
 }
 
-void SpellDictionary::addDictionaryFinish(uv_work_t* request){
+void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request){
 	HandleScope scope;
-	DictData* dictData = static_cast<DictData*>(request->data);
+	Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
 
 	if(dictData->callbackExists){
 		const unsigned argc = 2;
@@ -294,26 +292,16 @@ void SpellDictionary::addDictionaryFinish(uv_work_t* request){
 	delete dictData;
 }
 
-struct WordData {
-	uv_work_t request;
-	Persistent<Function> callback;
-	bool removeWord;
-	bool callbackExists;
-	bool success;
-	std::string word;
-	Hunspell *spellClass;
-};
-
-Handle<Value> SpellDictionary::addWord(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::addWord(const Arguments& args) {
 	HandleScope scope;
 	
 	if (args.Length() < 1 || !args[0]->IsString()) {
 		return ThrowException(Exception::TypeError(
 		String::New("First argument must be a string.")));
 	}
-	SpellDictionary* obj = ObjectWrap::Unwrap<SpellDictionary>(args.This());
+	Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
 	String::Utf8Value arg0(args[0]->ToString());
-	WordData* wordData = new WordData();
+	Nodehun::WordData* wordData = new Nodehun::WordData();
 	if(args.Length() > 1 && args[1]->IsFunction()){
 		Local<Function> callback = Local<Function>::Cast(args[1]);
 		wordData->callback = Persistent<Function>::New(callback);
@@ -329,20 +317,20 @@ Handle<Value> SpellDictionary::addWord(const Arguments& args) {
 	wordData->request.data = wordData;
 	
 	uv_queue_work(uv_default_loop(), &wordData->request,
-					SpellDictionary::addRemoveWordWork, SpellDictionary::addRemoveWordFinish);
+					Nodehun::SpellDictionary::addRemoveWordWork, Nodehun::SpellDictionary::addRemoveWordFinish);
 	return Undefined();
 }
 
-Handle<Value> SpellDictionary::removeWord(const Arguments& args) {
+Handle<Value> Nodehun::SpellDictionary::removeWord(const Arguments& args) {
 	HandleScope scope;
 	
 	if (args.Length() < 1 || !args[0]->IsString()) {
 		return ThrowException(Exception::TypeError(
 		String::New("First argument must be a string.")));
 	}
-	SpellDictionary* obj = ObjectWrap::Unwrap<SpellDictionary>(args.This());
+	Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
 	String::Utf8Value arg0(args[0]->ToString());
-	WordData* wordData = new WordData();
+	Nodehun::WordData* wordData = new Nodehun::WordData();
 	if(args.Length() > 1 && args[1]->IsFunction()){
 		Local<Function> callback = Local<Function>::Cast(args[1]);
 		wordData->callback = Persistent<Function>::New(callback);
@@ -358,12 +346,12 @@ Handle<Value> SpellDictionary::removeWord(const Arguments& args) {
 	wordData->request.data = wordData;
 	
 	uv_queue_work(uv_default_loop(), &wordData->request,
-					SpellDictionary::addRemoveWordWork, SpellDictionary::addRemoveWordFinish);
+					Nodehun::SpellDictionary::addRemoveWordWork, Nodehun::SpellDictionary::addRemoveWordFinish);
 	return Undefined();
 }
 
-void SpellDictionary::addRemoveWordWork(uv_work_t* request){
-	WordData* wordData = static_cast<WordData*>(request->data);
+void Nodehun::SpellDictionary::addRemoveWordWork(uv_work_t* request){
+	Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
 	int status;
 	if(wordData->removeWord){
 		status = wordData->spellClass->remove(wordData->word.c_str());
@@ -374,9 +362,9 @@ void SpellDictionary::addRemoveWordWork(uv_work_t* request){
 	wordData->success = status == 0;
 }
 
-void SpellDictionary::addRemoveWordFinish(uv_work_t* request){
+void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request){
 	HandleScope scope;
-	WordData* wordData = static_cast<WordData*>(request->data);
+	Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
 
 	if(wordData->callbackExists){
 		const unsigned argc = 2;
@@ -392,25 +380,24 @@ void SpellDictionary::addRemoveWordFinish(uv_work_t* request){
 	}
 	delete wordData;
 }
-// Other Members
-Handle<Value> SetDictionariesPath(const Arguments& args) {
+
+Handle<Value> Nodehun::SetDictionariesPath(const Arguments& args) {
 	HandleScope scope;
 	if (args.Length() < 1 || !args[0]->IsString()) {
 		return ThrowException(Exception::TypeError(
 		String::New("First argument must be a string.")));
 	}
 	String::Utf8Value arg0(args[0]->ToString());
-	_dictionariesPath = *arg0;
+	Nodehun::_dictionariesPath = *arg0;
 	return scope.Close(Undefined());
 }
 
-#include "addwordperm.cpp"
-void RegisterModule(Handle<Object> target) {
+void Nodehun::RegisterModule(Handle<Object> target) {
 	HandleScope scope;
 	SpellDictionary::Init(target);
 	target->Set(String::NewSymbol("_setDictionariesPath"),
-		FunctionTemplate::New(SetDictionariesPath)->GetFunction());
+		FunctionTemplate::New(Nodehun::SetDictionariesPath)->GetFunction());
 	target->Set(String::NewSymbol("addWordsPerm"),
-		FunctionTemplate::New(AddWordsPermanently)->GetFunction());
+		FunctionTemplate::New(Nodehun::AddWordsPermanently)->GetFunction());
 }
-NODE_MODULE(nodehun, RegisterModule);
+NODE_MODULE(nodehun, Nodehun::RegisterModule);

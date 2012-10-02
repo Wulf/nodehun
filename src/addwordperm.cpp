@@ -1,32 +1,33 @@
+/*Copyright (c) 2012 Nathan Sweet, DataSphere Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the 
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 #include <algorithm>
 #include <vector>
 #include <iostream>
 #include <sstream>
 #include <fcntl.h>
+#include "addwordperm.hpp"
 
-struct WordsData {
-	Persistent<Function> callback;
-	bool callbackExists;
-	std::vector<std::string> words;
-	std::vector<std::string> wordsAdded;
-	bool success;
-	int numWords;
-	int numAdded;
-	std::string dictionary;
-	uv_async_t async;
-	uv_fs_t open_req;
-	uv_fs_t stat_req;
-	uv_fs_t read_req;
-	uv_fs_t write_req;
-	uv_fs_t close_req;
-	std::string error;
-	std::string file;
-	uv_thread_t thread_id;
-	int fileSize;
-	char * buffer;
-};
 
-bool sortStringsBool(std::string a, std::string b){
+using namespace v8;
+bool Nodehun::sortStringsBool(std::string a, std::string b){
 	int i = 0;
 	std::string first = a.substr(0,a.find_first_of('/'));
 	std::string second = b.substr(0,b.find_first_of('/'));
@@ -39,7 +40,7 @@ bool sortStringsBool(std::string a, std::string b){
 	return first.length() < second.length();
 }
 
-int sortStringsInt(std::string a, std::string b){
+int Nodehun::sortStringsInt(std::string a, std::string b){
 	int i = 0;
 	std::string first = a.substr(0,a.find_first_of('/'));
 	std::string second = b.substr(0,b.find_first_of('/'));
@@ -54,14 +55,14 @@ int sortStringsInt(std::string a, std::string b){
 	else return 0;
 }
 
-void AddWordsPermCloseFile(uv_fs_t *close_req){
-	WordsData* wordsData = static_cast<WordsData*>(close_req->data);
+void Nodehun::AddWordsPermCloseFile(uv_fs_t *close_req){
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(close_req->data);
 	uv_async_send(&wordsData->async);
 	uv_fs_req_cleanup(close_req);
 }
 
-void AddWordsPermWrite (uv_fs_t *write_req){
-	WordsData* wordsData = static_cast<WordsData*>(write_req->data);
+void Nodehun::AddWordsPermWrite (uv_fs_t *write_req){
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(write_req->data);
 	if(write_req->result == -1){
 		wordsData->error.append("Error writing dictionary.");
 		wordsData->success = false;
@@ -70,11 +71,11 @@ void AddWordsPermWrite (uv_fs_t *write_req){
 		wordsData->success = true;
 	}
 	wordsData->close_req.data = wordsData;
-	uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, AddWordsPermCloseFile);
+	uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, Nodehun::AddWordsPermCloseFile);
 	uv_fs_req_cleanup(write_req);
 }
 
-int AddWordsComp(WordsData * wordsData,std::string item, int i){
+int Nodehun::AddWordsComp(WordsData * wordsData,std::string item, int i){
 	std::string curStr;
 	int compInt;
 	if(i < wordsData->numWords){
@@ -102,14 +103,14 @@ int AddWordsComp(WordsData * wordsData,std::string item, int i){
 	return i;
 }
 
-void AddWordsPermRead(uv_fs_t *read_req) {
-	WordsData* wordsData = static_cast<WordsData*>(read_req->data);
+void Nodehun::AddWordsPermRead(uv_fs_t *read_req) {
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(read_req->data);
 	
 	if(read_req->result == -1){
 		wordsData->error.append("Error reading dictionary.");
 		wordsData->success = false;
 		wordsData->close_req.data = wordsData;
-		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, AddWordsPermCloseFile);
+		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, Nodehun::AddWordsPermCloseFile);
 	}
 	else {
 		std::string in(wordsData->buffer);
@@ -158,7 +159,7 @@ void AddWordsPermRead(uv_fs_t *read_req) {
 		wordsData->write_req.data = wordsData;
 		wordsData->fileSize = wordsData->file.size();
 		uv_fs_write(uv_default_loop(), &wordsData->write_req, wordsData->open_req.result,
-			(void*)wordsData->file.c_str(), wordsData->fileSize, 0, AddWordsPermWrite);
+			(void*)wordsData->file.c_str(), wordsData->fileSize, 0, Nodehun::AddWordsPermWrite);
 		
 	}
 	if(wordsData->buffer)
@@ -166,60 +167,60 @@ void AddWordsPermRead(uv_fs_t *read_req) {
 	uv_fs_req_cleanup(read_req);
 }
 
-void AddWordsPermStat(uv_fs_t* stat_req){
-	WordsData* wordsData = static_cast<WordsData*>(stat_req->data);
+void Nodehun::AddWordsPermStat(uv_fs_t* stat_req){
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(stat_req->data);
 	if(stat_req->result == -1){
 		wordsData->error.append("Dictionary does not exist");
 		wordsData->success = false;
 		wordsData->close_req.data = wordsData;
-		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, AddWordsPermCloseFile);
+		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, Nodehun::AddWordsPermCloseFile);
 	}
 	else{
 		wordsData->read_req.data = wordsData;
 		wordsData->fileSize = ((struct stat*)stat_req->ptr)->st_size;
 		wordsData->buffer = (char*)malloc(wordsData->fileSize);
 		uv_fs_read(uv_default_loop(), &wordsData->read_req, wordsData->open_req.result, wordsData->buffer,
-					wordsData->fileSize, -1, AddWordsPermRead);
+					wordsData->fileSize, -1, Nodehun::AddWordsPermRead);
 	}
 	uv_fs_req_cleanup(stat_req);
 }
 
-void AddWordsPermOpen(uv_fs_t* open_req){
-	WordsData* wordsData = static_cast<WordsData*>(open_req->data);
+void Nodehun::AddWordsPermOpen(uv_fs_t* open_req){
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(open_req->data);
 	if(open_req->result == -1){
 		wordsData->error.append("Dictionary does not exist");
 		wordsData->success = false;
 		wordsData->close_req.data = wordsData;
-		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, AddWordsPermCloseFile);
+		uv_fs_close(uv_default_loop(), &wordsData->close_req, wordsData->open_req.result, Nodehun::AddWordsPermCloseFile);
 	}
 	else{
 		wordsData->stat_req.data = wordsData;
-		uv_fs_fstat(uv_default_loop(), &wordsData->stat_req, open_req->result, AddWordsPermStat);	
+		uv_fs_fstat(uv_default_loop(), &wordsData->stat_req, open_req->result, Nodehun::AddWordsPermStat);	
 	}
 	uv_fs_req_cleanup(open_req);
 }
 
-void AddWordsPermWork(void* arg){
+void Nodehun::AddWordsPermWork(void* arg){
 	uv_async_t* async = (uv_async_t*)arg;
-	WordsData* wordsData = static_cast<WordsData*>(async->data);
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(async->data);
 
 	std::sort(wordsData->words.begin(), wordsData->words.end(),sortStringsBool);
 	
 	wordsData->success = true;
 
 	std::string dictionaryDir;
-	dictionaryDir.append(_dictionariesPath);
+	dictionaryDir.append(Nodehun::_dictionariesPath);
 	dictionaryDir.append(wordsData->dictionary);
 	dictionaryDir.append(__SLASH__);
 	dictionaryDir.append(wordsData->dictionary);
 	dictionaryDir.append(".dic");
 	wordsData->open_req.data = wordsData;
-	uv_fs_open(uv_default_loop(), &wordsData->open_req, dictionaryDir.c_str(),O_RDWR,O_EXCL,AddWordsPermOpen);
+	uv_fs_open(uv_default_loop(), &wordsData->open_req, dictionaryDir.c_str(),O_RDWR,O_EXCL,Nodehun::AddWordsPermOpen);
 }
 
-void AddWordsPermFinish(uv_async_t *async, int status) {
+void Nodehun::AddWordsPermFinish(uv_async_t *async, int status) {
 	HandleScope scope;
-	WordsData* wordsData = static_cast<WordsData*>(async->data);
+	Nodehun::WordsData* wordsData = static_cast<Nodehun::WordsData*>(async->data);
 	if(wordsData->callbackExists){
 		const unsigned argc = 2;
 		Local<Value> argv[argc];
@@ -248,7 +249,7 @@ void AddWordsPermFinish(uv_async_t *async, int status) {
 	delete wordsData;
 }
 
-Handle<Value> AddWordsPermanently(const Arguments& args){
+Handle<Value> Nodehun::AddWordsPermanently(const Arguments& args){
 	HandleScope scope;
 	if(args.Length() < 2){
 		return ThrowException(Exception::TypeError(
@@ -263,7 +264,7 @@ Handle<Value> AddWordsPermanently(const Arguments& args){
 		String::New("Second argument must be an array.")));
 	}
 
-	WordsData* wordsData = new WordsData();
+	Nodehun::WordsData* wordsData = new Nodehun::WordsData();
 	
 	if(args.Length() > 2 && args[2]->IsFunction()){
 		Local<Function> callback = Local<Function>::Cast(args[2]);
@@ -303,8 +304,8 @@ Handle<Value> AddWordsPermanently(const Arguments& args){
 	wordsData->numWords = arrL;
 	wordsData->async.data = wordsData;
 	
-	uv_async_init(uv_default_loop(), &wordsData->async, AddWordsPermFinish);
-	uv_thread_create(&wordsData->thread_id, AddWordsPermWork, (void *)&wordsData->async);
+	uv_async_init(uv_default_loop(), &wordsData->async, Nodehun::AddWordsPermFinish);
+	uv_thread_create(&wordsData->thread_id, Nodehun::AddWordsPermWork, (void *)&wordsData->async);
 	
 	return Undefined();
 }
