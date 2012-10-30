@@ -31,8 +31,7 @@ bool Nodehun::sortStringsBool(std::string a, std::string b){
 	int i = 0;
 	std::string first = a.substr(0,a.find_first_of('/'));
 	std::string second = b.substr(0,b.find_first_of('/'));
-	while ((i < first.length()) && (i < second.length()))
-	{
+	while ((i < first.length()) && (i < second.length())){
 		if (tolower (first[i]) < tolower (second[i])) return true;
 		else if (tolower (first[i]) > tolower (second[i])) return false;
 		i++;
@@ -44,8 +43,7 @@ int Nodehun::sortStringsInt(std::string a, std::string b){
 	int i = 0;
 	std::string first = a.substr(0,a.find_first_of('/'));
 	std::string second = b.substr(0,b.find_first_of('/'));
-	while ((i < first.length()) && (i < second.length()))
-	{
+	while ((i < first.length()) && (i < second.length())){
 		if (tolower (first[i]) < tolower (second[i])) return -1;
 		else if (tolower (first[i]) > tolower (second[i])) return 1;
 		i++;

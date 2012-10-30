@@ -22,6 +22,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <node.h>
 #include <string>
 #include <hunspell.hxx>
+#include <iostream>
 #ifdef _WIN32
 #define __SLASH__ "\\"
 #else
@@ -183,10 +184,12 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) 
 
 void Nodehun::SpellDictionary::CheckSuggestions(uv_work_t* request) {
 	Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-
 	spellData->wordCorrect = spellData->spellClass->spell(spellData->word.c_str());
 	if (!spellData->wordCorrect){
 		spellData->numSuggest = spellData->spellClass->suggest(&(spellData->suggestions),spellData->word.c_str());
+	}
+	else{
+		spellData->numSuggest = 0;
 	}
 }
 
