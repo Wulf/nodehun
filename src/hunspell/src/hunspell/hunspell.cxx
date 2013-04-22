@@ -8,26 +8,35 @@
 #include "hunspell.hxx"
 #include "hunspell.h"
 #ifndef MOZILLA_CLIENT
-#    include "config.h"
+#include "config.h"
 #endif
 #include "csutil.hxx"
 
-Hunspell::Hunspell(const char * affpath, const char * dpath, const char * key)
+Hunspell::Hunspell(const char * affpath, const char * dpath, const char * key, bool notpath) 
+{
+  Init(affpath,dpath,key,notpath);
+}
+Hunspell::Hunspell(const char * affpath, const char * dpath, bool notpath)
+{
+  Init(affpath,dpath,NULL,notpath);
+}
+void Hunspell::Init(const char * affpath, const char * dpath, const char * key, bool notpath)
 {
     encoding = NULL;
     csconv = NULL;
     utf8 = 0;
     complexprefixes = 0;
+    isnotpath = notpath;
     affixpath = mystrdup(affpath);
     maxdic = 0;
 
     /* first set up the hash manager */
-    pHMgr[0] = new HashMgr(dpath, affpath, key);
+    pHMgr[0] = new HashMgr(dpath, affpath, key, notpath);
     if (pHMgr[0]) maxdic = 1;
 
     /* next set up the affix manager */
     /* it needs access to the hash manager lookup methods */
-    pAMgr = new AffixMgr(affpath, pHMgr, &maxdic, key);
+    pAMgr = new AffixMgr(affpath, pHMgr, &maxdic, key, notpath);
 
     /* get the preferred try string and the dictionary */
     /* encoding from the Affix Manager for that dictionary */
@@ -66,7 +75,7 @@ Hunspell::~Hunspell()
 // load extra dictionaries
 int Hunspell::add_dic(const char * dpath, const char * key) {
     if (maxdic == MAXDIC || !affixpath) return 1;
-    pHMgr[maxdic] = new HashMgr(dpath, affixpath, key);
+    pHMgr[maxdic] = new HashMgr(dpath, affixpath, key, isnotpath);
     if (pHMgr[maxdic]) maxdic++; else return 1;
     return 0;
 }
@@ -1921,68 +1930,78 @@ char * Hunspell::morph_with_correction(const char * word)
 
 Hunhandle *Hunspell_create(const char * affpath, const char * dpath)
 {
-        return (Hunhandle*)(new Hunspell(affpath, dpath));
+  return (Hunhandle*)(new Hunspell(affpath, dpath,NULL,false));
 }
 
-Hunhandle *Hunspell_create_key(const char * affpath, const char * dpath,
-    const char * key)
+Hunhandle *Hunspell_create_notpath(const char * affpath, const char * dpath)
 {
-        return (Hunhandle*)(new Hunspell(affpath, dpath, key));
+  return (Hunhandle*)(new Hunspell(affpath, dpath, true));
+}
+
+Hunhandle *Hunspell_create_key(const char * affpath, const char * dpath, const char * key)
+{
+  return (Hunhandle*)(new Hunspell(affpath, dpath, key,false));
+}
+
+Hunhandle *Hunspell_create_key_notpath(const char * affpath, const char * dpath, const char * key)
+{
+  return (Hunhandle*)(new Hunspell(affpath, dpath, key, true));
 }
 
 void Hunspell_destroy(Hunhandle *pHunspell)
 {
-        delete (Hunspell*)(pHunspell);
+  delete (Hunspell*)(pHunspell);
 }
 
 int Hunspell_spell(Hunhandle *pHunspell, const char *word)
 {
-        return ((Hunspell*)pHunspell)->spell(word);
+  return ((Hunspell*)pHunspell)->spell(word);
 }
 
 char *Hunspell_get_dic_encoding(Hunhandle *pHunspell)
 {
-        return ((Hunspell*)pHunspell)->get_dic_encoding();
+  return ((Hunspell*)pHunspell)->get_dic_encoding();
 }
 
 int Hunspell_suggest(Hunhandle *pHunspell, char*** slst, const char * word)
 {
-        return ((Hunspell*)pHunspell)->suggest(slst, word);
+  return ((Hunspell*)pHunspell)->suggest(slst, word);
 }
 
 int Hunspell_analyze(Hunhandle *pHunspell, char*** slst, const char * word)
 {
-        return ((Hunspell*)pHunspell)->analyze(slst, word);
+  return ((Hunspell*)pHunspell)->analyze(slst, word);
 }
 
 int Hunspell_stem(Hunhandle *pHunspell, char*** slst, const char * word)
 {
-        return ((Hunspell*)pHunspell)->stem(slst, word);
+  return ((Hunspell*)pHunspell)->stem(slst, word);
 }
 
 int Hunspell_stem2(Hunhandle *pHunspell, char*** slst, char** desc, int n)
 {
-        return ((Hunspell*)pHunspell)->stem(slst, desc, n);
+  return ((Hunspell*)pHunspell)->stem(slst, desc, n);
 }
 
 int Hunspell_generate(Hunhandle *pHunspell, char*** slst, const char * word,
     const char * word2)
 {
-        return ((Hunspell*)pHunspell)->generate(slst, word, word2);
+  return ((Hunspell*)pHunspell)->generate(slst, word, word2);
 }
 
 int Hunspell_generate2(Hunhandle *pHunspell, char*** slst, const char * word,
     char** desc, int n)
 {
-        return ((Hunspell*)pHunspell)->generate(slst, word, desc, n);
+  return ((Hunspell*)pHunspell)->generate(slst, word, desc, n);
 }
 
   /* functions for run-time modification of the dictionary */
 
   /* add word to the run-time dictionary */
 
-int Hunspell_add(Hunhandle *pHunspell, const char * word) {
-        return ((Hunspell*)pHunspell)->add(word);
+int Hunspell_add(Hunhandle *pHunspell, const char * word) 
+{
+  return ((Hunspell*)pHunspell)->add(word);
 }
 
   /* add word to the run-time dictionary with affix flags of
@@ -1990,17 +2009,19 @@ int Hunspell_add(Hunhandle *pHunspell, const char * word) {
    * affixed forms of the new word, too.
    */
 
-int Hunspell_add_with_affix(Hunhandle *pHunspell, const char * word,
-        const char * example) {
-        return ((Hunspell*)pHunspell)->add_with_affix(word, example);
+int Hunspell_add_with_affix(Hunhandle *pHunspell, const char * word, const char * example) 
+{
+  return ((Hunspell*)pHunspell)->add_with_affix(word, example);
 }
 
   /* remove word from the run-time dictionary */
 
-int Hunspell_remove(Hunhandle *pHunspell, const char * word) {
-        return ((Hunspell*)pHunspell)->remove(word);
+int Hunspell_remove(Hunhandle *pHunspell, const char * word) 
+{
+  return ((Hunspell*)pHunspell)->remove(word);
 }
 
-void Hunspell_free_list(Hunhandle *, char *** slst, int n) {
-        freelist(slst, n);
+void Hunspell_free_list(Hunhandle *, char *** slst, int n) 
+{
+  freelist(slst, n);
 }

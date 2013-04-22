@@ -9,10 +9,19 @@
 #include "hashmgr.hxx"
 #include "csutil.hxx"
 #include "atypes.hxx"
-
+#include "filemgr.hxx"
+#include "strmgr.hxx"
 // build a hash table from a munched word list
 
-HashMgr::HashMgr(const char * tpath, const char * apath, const char * key)
+HashMgr::HashMgr(const char * tpath, const char * apath, const char * key, bool notpath)
+{
+  Init(tpath,apath,key,notpath);
+}
+HashMgr::HashMgr(const char * tpath, const char * apath, bool notpath)
+{
+  Init(tpath,apath,NULL,notpath);
+}
+void HashMgr::Init(const char * tpath, const char * apath,const char * key, bool notpath)
 {
   tablesize = 0;
   tableptr = NULL;
@@ -31,8 +40,8 @@ HashMgr::HashMgr(const char * tpath, const char * apath, const char * key)
   numaliasm = 0;
   aliasm = NULL;
   forbiddenword = FORBIDDENWORD; // forbidden word signing flag
-  load_config(apath, key);
-  int ec = load_tables(tpath, key);
+  load_config(apath, key,notpath);
+  int ec = load_tables(tpath, key,notpath);
   if (ec) {
     /* error condition - what should we do here */
     HUNSPELL_WARNING(stderr, "Hash Manager Error : %d\n",ec);
@@ -43,7 +52,6 @@ HashMgr::HashMgr(const char * tpath, const char * apath, const char * key)
     tablesize = 0;
   }
 }
-
 
 HashMgr::~HashMgr()
 {
@@ -349,7 +357,7 @@ struct hentry * HashMgr::walk_hashtable(int &col, struct hentry * hp) const
 }
 
 // load a munched word list and build a hash table on the fly
-int HashMgr::load_tables(const char * tpath, const char * key)
+int HashMgr::load_tables(const char * tpath, const char * key,bool notpath)
 {
   int al;
   char * ap;
@@ -359,7 +367,12 @@ int HashMgr::load_tables(const char * tpath, const char * key)
   char * ts;
 
   // open dictionary file
-  FileMgr * dict = new FileMgr(tpath, key);
+  IStrMgr * dict;
+  if(notpath)
+    dict = new StrMgr(tpath,key);
+  else
+    dict = new FileMgr(tpath,key);
+  
   if (dict == NULL) return 1;
 
   // first read the first line of file to get hash table size */
@@ -489,7 +502,7 @@ int HashMgr::hash(const char * word) const
     return (unsigned long) hv % tablesize;
 }
 
-int HashMgr::decode_flags(unsigned short ** result, char * flags, FileMgr * af) {
+int HashMgr::decode_flags(unsigned short ** result, char * flags, IStrMgr * af) {
     int len;
     if (*flags == '\0') {
         *result = NULL;
@@ -601,13 +614,18 @@ char * HashMgr::encode_flag(unsigned short f) {
 }
 
 // read in aff file and set flag mode
-int  HashMgr::load_config(const char * affpath, const char * key)
+int  HashMgr::load_config(const char * affpath, const char * key,bool notpath)
 {
   char * line; // io buffers
   int firstline = 1;
  
   // open the affix file
-  FileMgr * afflst = new FileMgr(affpath, key);
+  IStrMgr * afflst;
+  if(notpath)
+    afflst = new StrMgr(affpath,key);
+  else
+    afflst = new FileMgr(affpath,key);
+
   if (!afflst) {
     HUNSPELL_WARNING(stderr, "Error - could not open affix description file %s\n",affpath);
     return 1;
@@ -700,7 +718,7 @@ int  HashMgr::load_config(const char * affpath, const char * key)
 }
 
 /* parse in the ALIAS table */
-int  HashMgr::parse_aliasf(char * line, FileMgr * af)
+int  HashMgr::parse_aliasf(char * line, IStrMgr * af)
 {
    if (numaliasf != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -806,7 +824,7 @@ int HashMgr::is_aliasf() {
     return (aliasf != NULL);
 }
 
-int HashMgr::get_aliasf(int index, unsigned short ** fvec, FileMgr * af) {
+int HashMgr::get_aliasf(int index, unsigned short ** fvec, IStrMgr * af) {
     if ((index > 0) && (index <= numaliasf)) {
         *fvec = aliasf[index - 1];
         return aliasflen[index - 1];
@@ -817,7 +835,7 @@ int HashMgr::get_aliasf(int index, unsigned short ** fvec, FileMgr * af) {
 }
 
 /* parse morph alias definitions */
-int  HashMgr::parse_aliasm(char * line, FileMgr * af)
+int  HashMgr::parse_aliasm(char * line, IStrMgr * af)
 {
    if (numaliasm != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());

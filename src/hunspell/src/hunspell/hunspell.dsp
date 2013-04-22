@@ -149,6 +149,10 @@ SOURCE=.\htypes.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=.\istrmgr.hxx
+# End Source File
+# Begin Source File
+
 SOURCE=.\langnum.hxx
 # End Source File
 # Begin Source File

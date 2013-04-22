@@ -11,10 +11,21 @@
 #include "affixmgr.hxx"
 #include "affentry.hxx"
 #include "langnum.hxx"
+#include "filemgr.hxx"
+#include "strmgr.hxx"
 
 #include "csutil.hxx"
 
-AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, const char * key) 
+AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, const char * key, bool notpath) 
+{
+  Init(affpath,ptr,md,key,notpath);
+}
+AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, bool notpath)
+{
+  Init(affpath,ptr,md,NULL,notpath);
+}
+
+void AffixMgr::Init(const char * affpath, HashMgr** ptr, int * md, const char * key, bool notpath) 
 {
   // register hash manager and load affix data from aff file
   pHMgr = ptr[0];
@@ -110,7 +121,7 @@ AffixMgr::AffixMgr(const char * affpath, HashMgr** ptr, int * md, const char * k
     contclasses[j] = 0;
   }
 
-  if (parse_file(affpath, key)) {
+  if (parse_file(affpath, key, notpath)) {
      HUNSPELL_WARNING(stderr, "Failure loading aff file %s\n",affpath);
   }
   
@@ -255,7 +266,7 @@ AffixMgr::~AffixMgr()
 
 
 // read in aff file and build up prefix and suffix entry objects 
-int  AffixMgr::parse_file(const char * affpath, const char * key)
+int  AffixMgr::parse_file(const char * affpath, const char * key, bool notpath)
 {
   char * line; // io buffers
   char ft;     // affix type
@@ -268,7 +279,12 @@ int  AffixMgr::parse_file(const char * affpath, const char * key)
   int firstline = 1;
   
   // open the affix file
-  FileMgr * afflst = new FileMgr(affpath, key);
+  IStrMgr * afflst;
+  if(notpath)
+    afflst = new StrMgr(affpath,key);
+  else
+    afflst = new FileMgr(affpath,key);
+  
   if (!afflst) {
     HUNSPELL_WARNING(stderr, "error: could not open affix description file %s\n",affpath);
     return 1;
@@ -3444,7 +3460,7 @@ int AffixMgr::get_sugswithdots(void) const
 }
 
 /* parse flag */
-int AffixMgr::parse_flag(char * line, unsigned short * out, FileMgr * af) {
+int AffixMgr::parse_flag(char * line, unsigned short * out, IStrMgr * af) {
    char * s = NULL;
    if (*out != FLAG_NULL && !(*out >= DEFAULTFLAGS)) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple definitions of an affix file parameter\n", af->getlinenum());
@@ -3457,7 +3473,7 @@ int AffixMgr::parse_flag(char * line, unsigned short * out, FileMgr * af) {
 }
 
 /* parse num */
-int AffixMgr::parse_num(char * line, int * out, FileMgr * af) {
+int AffixMgr::parse_num(char * line, int * out, IStrMgr * af) {
    char * s = NULL;
    if (*out != -1) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple definitions of an affix file parameter\n", af->getlinenum());
@@ -3470,7 +3486,7 @@ int AffixMgr::parse_num(char * line, int * out, FileMgr * af) {
 }
 
 /* parse in the max syllablecount of compound words and  */
-int  AffixMgr::parse_cpdsyllable(char * line, FileMgr * af)
+int  AffixMgr::parse_cpdsyllable(char * line, IStrMgr * af)
 {
    char * tp = line;
    char * piece;
@@ -3514,7 +3530,7 @@ int  AffixMgr::parse_cpdsyllable(char * line, FileMgr * af)
 }
 
 /* parse in the typical fault correcting table */
-int  AffixMgr::parse_reptable(char * line, FileMgr * af)
+int  AffixMgr::parse_reptable(char * line, IStrMgr * af)
 {
    if (numrep != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -3599,7 +3615,7 @@ int  AffixMgr::parse_reptable(char * line, FileMgr * af)
 }
 
 /* parse in the typical fault correcting table */
-int  AffixMgr::parse_convtable(char * line, FileMgr * af, RepList ** rl, const char * keyword)
+int  AffixMgr::parse_convtable(char * line, IStrMgr * af, RepList ** rl, const char * keyword)
 {
    if (*rl) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -3685,7 +3701,7 @@ int  AffixMgr::parse_convtable(char * line, FileMgr * af, RepList ** rl, const c
 
 
 /* parse in the typical fault correcting table */
-int  AffixMgr::parse_phonetable(char * line, FileMgr * af)
+int  AffixMgr::parse_phonetable(char * line, IStrMgr * af)
 {
    if (phone) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -3772,7 +3788,7 @@ int  AffixMgr::parse_phonetable(char * line, FileMgr * af)
 }
 
 /* parse in the checkcompoundpattern table */
-int  AffixMgr::parse_checkcpdtable(char * line, FileMgr * af)
+int  AffixMgr::parse_checkcpdtable(char * line, IStrMgr * af)
 {
    if (numcheckcpd != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -3867,7 +3883,7 @@ int  AffixMgr::parse_checkcpdtable(char * line, FileMgr * af)
 }
 
 /* parse in the compound rule table */
-int  AffixMgr::parse_defcpdtable(char * line, FileMgr * af)
+int  AffixMgr::parse_defcpdtable(char * line, IStrMgr * af)
 {
    if (numdefcpd != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -3966,7 +3982,7 @@ int  AffixMgr::parse_defcpdtable(char * line, FileMgr * af)
 
 
 /* parse in the character map table */
-int  AffixMgr::parse_maptable(char * line, FileMgr * af)
+int  AffixMgr::parse_maptable(char * line, IStrMgr * af)
 {
    if (nummap != 0) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -4070,7 +4086,7 @@ int  AffixMgr::parse_maptable(char * line, FileMgr * af)
 }
 
 /* parse in the word breakpoint table */
-int  AffixMgr::parse_breaktable(char * line, FileMgr * af)
+int  AffixMgr::parse_breaktable(char * line, IStrMgr * af)
 {
    if (numbreak > -1) {
       HUNSPELL_WARNING(stderr, "error: line %d: multiple table definitions\n", af->getlinenum());
@@ -4171,7 +4187,7 @@ void AffixMgr::reverse_condition(char * piece) {
     }
 }
 
-int  AffixMgr::parse_affix(char * line, const char at, FileMgr * af, char * dupflags)
+int  AffixMgr::parse_affix(char * line, const char at, IStrMgr * af, char * dupflags)
 {
    int numents = 0;      // number of affentry structures to parse
 

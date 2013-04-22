@@ -10,6 +10,7 @@
 #include "hashmgr.hxx"
 #include "phonet.hxx"
 #include "replist.hxx"
+#include "istrmgr.hxx"
 
 // check flag duplication
 #define dupSFX        (1 << 0)
@@ -109,8 +110,8 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr
 
 public:
 
-  AffixMgr(const char * affpath, HashMgr** ptr, int * md,
-    const char * key = NULL);
+  AffixMgr(const char * affpath, HashMgr** ptr, int * md,const char * key = NULL, bool notpath = false);
+  AffixMgr(const char * affpath, HashMgr** ptr, int * md, bool notpath = false);
   ~AffixMgr();
   struct hentry *     affix_check(const char * word, int len,
             const unsigned short needflag = (unsigned short) 0,
@@ -217,18 +218,19 @@ public:
   int                 get_fullstrip() const;
 
 private:
-  int  parse_file(const char * affpath, const char * key);
-  int  parse_flag(char * line, unsigned short * out, FileMgr * af);
-  int  parse_num(char * line, int * out, FileMgr * af);
-  int  parse_cpdsyllable(char * line, FileMgr * af);
-  int  parse_reptable(char * line, FileMgr * af);
-  int  parse_convtable(char * line, FileMgr * af, RepList ** rl, const char * keyword);
-  int  parse_phonetable(char * line, FileMgr * af);
-  int  parse_maptable(char * line, FileMgr * af);
-  int  parse_breaktable(char * line, FileMgr * af);
-  int  parse_checkcpdtable(char * line, FileMgr * af);
-  int  parse_defcpdtable(char * line, FileMgr * af);
-  int  parse_affix(char * line, const char at, FileMgr * af, char * dupflags);
+  void Init(const char * affpath, HashMgr** ptr, int * md, const char * key, bool notpath);
+  int  parse_file(const char * affpath, const char * key, bool notpath);
+  int  parse_flag(char * line, unsigned short * out, IStrMgr * af);
+  int  parse_num(char * line, int * out, IStrMgr * af);
+  int  parse_cpdsyllable(char * line, IStrMgr * af);
+  int  parse_reptable(char * line, IStrMgr * af);
+  int  parse_convtable(char * line, IStrMgr * af, RepList ** rl, const char * keyword);
+  int  parse_phonetable(char * line, IStrMgr * af);
+  int  parse_maptable(char * line, IStrMgr * af);
+  int  parse_breaktable(char * line, IStrMgr * af);
+  int  parse_checkcpdtable(char * line, IStrMgr * af);
+  int  parse_defcpdtable(char * line, IStrMgr * af);
+  int  parse_affix(char * line, const char at, IStrMgr * af, char * dupflags);
 
   void reverse_condition(char *);
   void debugflag(char * result, unsigned short flag);

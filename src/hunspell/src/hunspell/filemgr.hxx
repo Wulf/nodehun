@@ -5,21 +5,22 @@
 #include "hunvisapi.h"
 
 #include "hunzip.hxx"
+#include "istrmgr.hxx"
 #include <stdio.h>
 
-class LIBHUNSPELL_DLL_EXPORTED FileMgr
+class LIBHUNSPELL_DLL_EXPORTED FileMgr : public IStrMgr
 {
 protected:
-    FILE * fin;
-    Hunzip * hin;
-    char in[BUFSIZE + 50]; // input buffer
-    int fail(const char * err, const char * par);
-    int linenum;
-
-public:
-    FileMgr(const char * filename, const char * key = NULL);
-    ~FileMgr();
-    char * getline();
-    int getlinenum();
+  FILE * fin;
+  Hunzip * hin;
+  char in[BUFSIZE + 50]; // input buffer
+  int fail(const char * err, const char * par);
+  int linenum;
+  
+ public:
+  FileMgr(const char * filename, const char * key = NULL);
+  virtual ~FileMgr();
+  virtual char * getline();
+  virtual int getlinenum();
 };
 #endif

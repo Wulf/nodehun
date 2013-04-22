@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "htypes.hxx"
-#include "filemgr.hxx"
+#include "istrmgr.hxx"
 
 enum flag { FLAG_CHAR, FLAG_LONG, FLAG_NUM, FLAG_UNI };
 
@@ -34,7 +34,8 @@ class LIBHUNSPELL_DLL_EXPORTED HashMgr
 
 
 public:
-  HashMgr(const char * tpath, const char * apath, const char * key = NULL);
+  HashMgr(const char * tpath, const char * apath, const char * key = NULL, bool notpath = false);
+  HashMgr(const char * tpath, const char * apath, bool notpath = false);
   ~HashMgr();
 
   struct hentry * lookup(const char *) const;
@@ -44,24 +45,25 @@ public:
   int add(const char * word);
   int add_with_affix(const char * word, const char * pattern);
   int remove(const char * word);
-  int decode_flags(unsigned short ** result, char * flags, FileMgr * af);
+  int decode_flags(unsigned short ** result, char * flags, IStrMgr * af);
   unsigned short        decode_flag(const char * flag);
   char *                encode_flag(unsigned short flag);
   int is_aliasf();
-  int get_aliasf(int index, unsigned short ** fvec, FileMgr * af);
+  int get_aliasf(int index, unsigned short ** fvec, IStrMgr * af);
   int is_aliasm();
   char * get_aliasm(int index);
 
 private:
+  void Init(const char * tstr, const char * astr,const char * key, bool notpath);
   int get_clen_and_captype(const char * word, int wbl, int * captype);
-  int load_tables(const char * tpath, const char * key);
+  int load_tables(const char * tpath, const char * key, bool notpath);
   int add_word(const char * word, int wbl, int wcl, unsigned short * ap,
     int al, const char * desc, bool onlyupcase);
-  int load_config(const char * affpath, const char * key);
-  int parse_aliasf(char * line, FileMgr * af);
+  int load_config(const char * affpath, const char * key, bool notpath);
+  int parse_aliasf(char * line, IStrMgr * af);
   int add_hidden_capitalized_word(char * word, int wbl, int wcl,
     unsigned short * flags, int al, char * dp, int captype);
-  int parse_aliasm(char * line, FileMgr * af);
+  int parse_aliasm(char * line, IStrMgr * af);
   int remove_forbidden_flag(const char * word);
 
 };

@@ -23,6 +23,7 @@ class LIBHUNSPELL_DLL_EXPORTED Hunspell
   HashMgr*        pHMgr[MAXDIC];
   int             maxdic;
   SuggestMgr*     pSMgr;
+  bool            isnotpath;
   char *          affixpath;
   char *          encoding;
   struct cs_info * csconv;
@@ -37,7 +38,8 @@ public:
    * input: path of affix file and dictionary file
    */
 
-  Hunspell(const char * affpath, const char * dpath, const char * key = NULL);
+  Hunspell(const char * affpath, const char * dpath, const char * key = NULL, bool notpath = false);
+  Hunspell(const char * affpath, const char * dpath, bool notpath = false);
   ~Hunspell();
 
   /* load extra dictionaries (only dic files) */
@@ -145,6 +147,7 @@ public:
 #endif
 
 private:
+   void   Init(const char * affpath, const char * dpath, const char * key, bool notpath);
    int    cleanword(char *, const char *, int * pcaptype, int * pabbrev);
    int    cleanword2(char *, const char *, w_char *, int * w_len, int * pcaptype, int * pabbrev);
    void   mkinitcap(char *);
