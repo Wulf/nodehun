@@ -1,6 +1,6 @@
 {
   "name": "nodehun",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features.",
   "main": "lib/index.js",
   "directories": {
