@@ -44,6 +44,7 @@ public:
 
   /* load extra dictionaries (only dic files) */
   int add_dic(const char * dpath, const char * key = NULL);
+  int add_dic(const char * dpath, const bool _notpath, const char * key = NULL);
 
   /* spell(word) - spellcheck word
    * output: 0 = bad word, not 0 = good word

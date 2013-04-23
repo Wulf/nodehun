@@ -74,8 +74,12 @@ Hunspell::~Hunspell()
 
 // load extra dictionaries
 int Hunspell::add_dic(const char * dpath, const char * key) {
+  return add_dic(dpath,false,key);
+}
+
+int Hunspell::add_dic(const char * dpath, const bool _notpath, const char * key) {
     if (maxdic == MAXDIC || !affixpath) return 1;
-    pHMgr[maxdic] = new HashMgr(dpath, affixpath, key, isnotpath);
+    pHMgr[maxdic] = new HashMgr(dpath, affixpath, key,_notpath);
     if (pHMgr[maxdic]) maxdic++; else return 1;
     return 0;
 }
