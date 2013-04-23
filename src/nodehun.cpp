@@ -1,7 +1,7 @@
 #include "license.nodehun"
 #include "nodehun.hpp"
 #include <iostream>
-#include <exception>
+#include <string.h>
 
 using namespace v8;
 
@@ -193,32 +193,46 @@ void Nodehun::SpellDictionary::SendSuggestions(uv_work_t* request){
 
 Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
   HandleScope scope;
-  if (args.Length() < 1 || !args[0]->IsString())
+  int argl = args.Length();
+  if (argl < 1 || !args[0]->IsString())
     return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
-
+  
   Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
   Nodehun::DictData* dictData = new Nodehun::DictData();
   String::Utf8Value arg0(args[0]->ToString());
+  dictData->notpath = false;
+  dictData->callbackExists = false;
 
-  if(args.Length() > 1 && args[1]->IsFunction()){
+  if(argl > 1 && args[1]->IsFunction()){
     Local<Function> callback = Local<Function>::Cast(args[1]);
     dictData->callback = Persistent<Function>::New(callback);
     dictData->callbackExists = true;
   }
-  else{
-    dictData->callbackExists = false;
+  else if(argl > 1 && args[1]->IsBoolean()){
+    dictData->notpath = args[1]->BooleanValue();
+  }
+
+  if(!dictData->callbackExists && argl > 2 && args[2]->IsFunction()){
+    Local<Function> callback = Local<Function>::Cast(args[2]);
+    dictData->callback = Persistent<Function>::New(callback);
+    dictData->callbackExists = true;
+  }
+
+
+
+  if(!dictData->notpath){
+    dictData->path.append(Nodehun::_dictionariesPath);
+    dictData->path.append(*arg0);
+    dictData->path.append(__SLASH__);
+    dictData->path.append(*arg0);
+    dictData->path.append(".dic");
   }
   
-  dictData->path.append(Nodehun::_dictionariesPath);
-  dictData->path.append(*arg0);
-  dictData->path.append(__SLASH__);
-  dictData->path.append(*arg0);
-  dictData->path.append(".dic");
-  dictData->dict.append(*arg0);
-	
+  dictData->dict = (char*)malloc(strlen(*arg0)+1);
+  strcpy(dictData->dict,*arg0);
   dictData->spellClass = obj->spellClass;
   dictData->request.data = dictData;
-  
+
   uv_queue_work(uv_default_loop(), &dictData->request,
 		Nodehun::SpellDictionary::addDictionaryWork, Nodehun::SpellDictionary::addDictionaryFinish);
   return Undefined();
@@ -227,11 +241,11 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
 void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request){
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
   
-  if(!Nodehun::dictionaryDirectoryExists(dictData->path.c_str())){
+  if(!dictData->notpath && !Nodehun::dictionaryDirectoryExists(dictData->path.c_str())){
     dictData->success = false;
   }
   else{
-    int status = dictData->spellClass->add_dic(dictData->path.c_str());
+    int status = dictData->spellClass->add_dic(dictData->dict,dictData->notpath);
     dictData->success = status == 0;
   }
 }
@@ -244,7 +258,7 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request){
     const unsigned argc = 2;
     Local<Value> argv[argc];
     argv[0] = Local<Value>::New(Boolean::New(dictData->success));
-    argv[1] = Local<Value>::New(String::New(dictData->dict.c_str()));
+    argv[1] = Local<Value>::New(String::New(dictData->dict));
     TryCatch try_catch;
     dictData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
     if (try_catch.HasCaught()) {
@@ -252,6 +266,7 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request){
     }
     dictData->callback.Dispose();
   }
+  free(dictData->dict);
   delete dictData;
 }
 

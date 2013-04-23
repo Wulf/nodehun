@@ -58,7 +58,8 @@ namespace Nodehun {
     v8::Persistent<v8::Function> callback;
     bool callbackExists;
     std::string path;
-    std::string dict;
+    char * dict;
+    bool notpath;
     bool success;
     Hunspell *spellClass;
   };
