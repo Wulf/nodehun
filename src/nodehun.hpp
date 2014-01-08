@@ -139,17 +139,16 @@ protected:
   // of a successful addition of a dictionary to the dictionary
   // at runtime.
   //
-  static void addDictionaryFinish(uv_work_t* request);
-  //
+  static void addDictionaryFinish(uv_work_t* request, int i = -1);  //
   // add/remove a word work (threaded) to the dictionary
   // object at runtime.
   //
-  static void addRemoveWordWork(uv_work_t* request);
+  static void addRemoveWordWork(uv_work_t* request);  
   //
   // the call back to merge the thread that added/removed
   // a word from the dictionary object.
   //
-  static void addRemoveWordFinish(uv_work_t* request);
+  static void addRemoveWordFinish(uv_work_t* request, int i = -1);
   //
   // The work (threaded) to check to see if a given
   // string and if not what any possible suggestions might be.
@@ -160,5 +159,5 @@ protected:
   // suggestions from the dictionary object to return the result
   // of the work.
   //
-  static void SendSuggestions(uv_work_t* request);
+  static void SendSuggestions(uv_work_t* request, int i = -1);
 };
