@@ -2,6 +2,7 @@
 #include "nodehun.hpp"
 #include <iostream>
 #include <string.h>
+#include <stdlib.h>
 
 using namespace v8;
 
@@ -80,7 +81,7 @@ Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args) {
 
   String::Utf8Value arg0(args[0]->ToString());
   Nodehun::SpellDictionary * obj;
-  if(argl == 1 || argl > 1 && !args[1]->IsString()){    
+  if(argl == 1 || (argl > 1 && !args[1]->IsString())){    
     obj = new Nodehun::SpellDictionary(*arg0);
     if(!obj->pathsExist)
       return ThrowException(Exception::TypeError(String::New("No such dictionary exists.")));
