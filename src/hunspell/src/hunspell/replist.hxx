@@ -6,6 +6,8 @@
 
 #include "w_char.hxx"
 
+#undef near
+
 class LIBHUNSPELL_DLL_EXPORTED RepList
 {
 protected:

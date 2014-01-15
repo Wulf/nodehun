@@ -3,6 +3,8 @@
 #include <string>
 #include <hunspell.hxx>
 #include <node.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #ifdef _WIN32
 #define __SLASH__ "\\"
 #else
