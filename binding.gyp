@@ -3,11 +3,11 @@
     {
       'target_name': 'nodehun',
       'sources': [
-        'nodehun.cpp'
+        'src/nodehun.cpp'
       ],
       'cflags': [ '-O3' ],
       'dependencies': [
-        'hunspell/binding.gyp:hunspell',
+        'src/hunspell/binding.gyp:hunspell',
       ],
     },
   ],
