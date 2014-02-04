@@ -7,9 +7,6 @@ Nodehun has no "node_module" dependencies (yet), so it can either be installed v
 code is on your system. Usually having node installed is enough, but there are weird cases.
 	
 	npm install nodehun
-	cd src
-	node-gyp configure
-	node-gyp build
 	
 
 Introduction
