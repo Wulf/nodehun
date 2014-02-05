@@ -17,7 +17,7 @@ StrMgr::StrMgr(const char * str, const char * key) {
   done = false;
   int strl = strlen(str);
   if(strl > 0){
-    st = (char *) malloc(strl+1);
+    st = (char *) malloc(sizeof(char) * (strl + 1));
     strcpy(st,str);
   }
   else{

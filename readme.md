@@ -174,6 +174,3 @@ Nodehun can also remove a single word from a dictionary at runtime (this means i
 		
 	});
 	
-Add Dictionary Permanently and Add Word Permanently
----------------------------------------------------
-I have deprecated and scrapped these methods as they really violate good design philosophy of a well written node module. These methods can both be easily replicated using node itself. I am trying to move nodehun away from needing files at all, as they are a poor data-store for a distributed system.

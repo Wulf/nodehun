@@ -1,42 +1,18 @@
 #include "license.nodehun"
 #include <uv.h>
 #include <string>
+#include <stdlib.h>
 #include <hunspell.hxx>
 #include <node.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#ifdef _WIN32
-#define __SLASH__ "\\"
-#else
-#define __SLASH__ "/"
-#endif
+#include <node_buffer.h>
 
 namespace Nodehun {
-  //
-  // The folder in which the dictionaries are contained 
-  //
-  std::string _dictionariesPath;
   //
   // This is the JS object that binds to hunspell:
   // its internal methods are simply proxies to the
   // related hunspell methods.
   //
   class SpellDictionary;
-  //
-  // Checks to see if a dictionary exists
-  // based on whether it exists in the dictionary
-  // directory.
-  //
-  bool dictionaryDirectoryExists(const char *file);
-  //
-  // Sets where the dictionaries' folder is.
-  //
-  v8::Handle<v8::Value> SetDictionariesPath(const v8::Arguments& args);
-  //
-  // This registers all of the correct methods and objects
-  // with nodeJS.
-  //
-  void RegisterModule(v8::Handle<v8::Object> target);
   //
   // This is a baton for the asynchronous work of adding
   // or removing a word from the dictionary object at runtime.
@@ -59,9 +35,7 @@ namespace Nodehun {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
     bool callbackExists;
-    std::string path;
     char * dict;
-    bool notpath;
     bool success;
     Hunspell *spellClass;
   };
@@ -89,20 +63,16 @@ public:
   // when a new object is being created.
   //
   static v8::Persistent<v8::FunctionTemplate> constructor;
-  static void Init(v8::Handle<v8::Object> target);
-  SpellDictionary(const char *);
-  SpellDictionary(const char *, const char*);
+  static void Init(v8::Handle<v8::Object> exports, v8::Handle<v8::Object> module);
+  SpellDictionary(const char *affbuf, const char *dictbuf);
   //
-  // The destructor has to elimintate it's reference
-  // to the spellClass object (Hunspell) otherwise
-  // the object's reference count won't go down to zero.
+  // The destructor!
   //
   ~SpellDictionary(){
     if (spellClass != NULL)
       delete spellClass;
     spellClass = NULL;
   };
-  bool pathsExist;
   // The pointer to the Hunspell Object.
   Hunspell *spellClass;
 protected:
@@ -141,7 +111,8 @@ protected:
   // of a successful addition of a dictionary to the dictionary
   // at runtime.
   //
-  static void addDictionaryFinish(uv_work_t* request, int i = -1);  //
+  static void addDictionaryFinish(uv_work_t* request, int i = -1);
+  //
   // add/remove a word work (threaded) to the dictionary
   // object at runtime.
   //

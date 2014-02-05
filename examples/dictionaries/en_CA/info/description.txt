@@ -1,0 +1,6 @@
+Current word list updates provided by Paul Schmiedge.
+
+For original licences and contributors, please see README_en_CA.txt, 
+README_hyph_en_CA.txt and README_th_en_CA_v2.txt that have been provided
+with this extension that can be found by extracting the .oxt extension
+file.
