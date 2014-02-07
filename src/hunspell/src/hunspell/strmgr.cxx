@@ -1,9 +1,7 @@
 #include "license.hunspell"
 #include "license.myspell"
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+
 #include "strmgr.hxx"
 
 int StrMgr::fail(const char * err, const char * par) {
@@ -15,9 +13,9 @@ StrMgr::StrMgr(const char * str, const char * key) {
   linenum = 0;
   index = 0;
   done = false;
-  int strl = strlen(str);
+  size_t strl = strlen(str);
   if(strl > 0){
-    st = (char *) malloc(sizeof(char) * (strl + 1));
+    st = new char[strl + 1];
     strcpy(st,str);
   }
   else{
@@ -28,38 +26,41 @@ StrMgr::StrMgr(const char * str, const char * key) {
 
 StrMgr::~StrMgr()
 {
-  if (st) free(st);
+  if (st)
+    delete st;
 }
 
 char * StrMgr::getline() {
   if(done)
     return NULL;
-  char * buf;
+
   int size = 0,
-    curIndex = index,
-    i = 0;
-  while(st[index] != '\n' && st[index] != '\r' && st[index] != '\0')
+    curIndex = index;
+
+  while(st[index] != '\n' && st[index] != '\0')
   {
     index++;
     size++;
   }
+
   if(st[index] == '\0')
     done = true;
-  index++;
-  linenum++;
+  else
+    index++;
+
   if(size == 0)
     return getline();
-
-  buf = (char*)malloc(size+1);
+  linenum++;
+  int i = 0;
   while(st[curIndex] != '\n' && st[curIndex] != '\r' && st[curIndex] != '\0')
   {
-    buf[i] = st[curIndex];
-    curIndex++;
-    i++;
+    if(st[curIndex] != '\r')
+      in[i++] = st[curIndex++];
+    else
+      curIndex++;
   }
-  i++;
-  buf[i] = '\0';
-  return buf;
+  in[++i] = '\0';
+  return in;
 }
 
 int StrMgr::getlinenum() {

@@ -2,11 +2,11 @@
 #ifndef _STRMGR_HXX_
 #define _STRMGR_HXX_
 
+#include <string.h>
 #include "hunvisapi.h"
 
 #include "hunzip.hxx"
 #include "istrmgr.hxx"
-#include <stdio.h>
 
 class LIBHUNSPELL_DLL_EXPORTED StrMgr : public IStrMgr
 {
@@ -16,6 +16,7 @@ protected:
   bool done;
   int fail(const char * err,const char * par);
   int linenum;
+  char in[BUFSIZE + 50]; // input buffer
   
 public:
   StrMgr(const char * str, const char * key = NULL);

@@ -136,3 +136,16 @@ Nodehun can also remove a single word from a dictionary at runtime (this means i
 		
 	});
 	
+A Note About Creating Dictionaries
+----------------------------------
+
+If you want to create a new Hunspell dictionary you will need a base affix file. I recommend simply using one of the base affix files from the open office dictionaries for the language you are creating a dictionary for. Once you get around to creating a dictionary read the hunspell documentation to learn how to properly flag the words. However, my guess is that the vast majority of people creating dictionaries out there will be creating a dictionary of proper nouns. Proper nouns simply require the "M" flag. This is what a dictionary of proper nouns might look like:
+   
+   Aachen/M
+   aardvark/SM
+   Aaren/M
+   Aarhus/M
+   Aarika/M
+   Aaron/M
+
+Notice that the "S" flag denotes a proper noun that isn't capitalized, otherwise look in the docs.

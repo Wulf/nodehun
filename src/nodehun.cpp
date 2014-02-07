@@ -1,5 +1,4 @@
 #include "nodehun.hpp"
-#include <iostream>
 
 using namespace v8;
 using node::Buffer;
@@ -158,9 +157,8 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
     dictData->callback = Persistent<Function>::New(callback);
     dictData->callbackExists = true;
   }
-  const char* arg0 = Buffer::Data(args[0].As<Object>());
-  dictData->dict = (char*)malloc(sizeof(char) * (strlen(arg0) + 1));
-  strcpy(dictData->dict,arg0);
+  dictData->dict = new char[Buffer::Length(args[0]) + 1];
+  strcpy(dictData->dict,Buffer::Data(args[0].As<Object>()));
   dictData->spellClass = obj->spellClass;
   dictData->request.data = dictData;
 
@@ -190,7 +188,7 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i){
     }
     dictData->callback.Dispose();
   }
-  free(dictData->dict);
+  delete dictData->dict;
   delete dictData;
 }
 

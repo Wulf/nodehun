@@ -1,7 +1,6 @@
 #include "license.nodehun"
 #include <uv.h>
 #include <string>
-#include <stdlib.h>
 #include <hunspell.hxx>
 #include <node.h>
 #include <node_buffer.h>
