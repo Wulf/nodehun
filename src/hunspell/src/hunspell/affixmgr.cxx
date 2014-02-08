@@ -1,3 +1,4 @@
+
 #include "license.hunspell"
 #include "license.myspell"
 
@@ -3945,7 +3946,7 @@ int  AffixMgr::parse_defcpdtable(char * line, IStrMgr * af)
                                 defcpdtable[j].def = (FLAG *) malloc(strlen(piece) * sizeof(FLAG));
                                 defcpdtable[j].len = 0;
                                 int end = 0;
-                                FLAG * conv;
+				FLAG * conv = NULL;
                                 while (!end) {
                                     char * par = piece + 1;
                                     while (*par != '(' && *par != ')' && *par != '\0') par++;
@@ -3955,8 +3956,12 @@ int  AffixMgr::parse_defcpdtable(char * line, IStrMgr * af)
                                         defcpdtable[j].def[defcpdtable[j].len++] = (FLAG) *piece;
                                     } else if (*piece != '\0') {
                                         int l = pHMgr->decode_flags(&conv, piece, af);
-                                        for (int k = 0; k < l; k++) defcpdtable[j].def[defcpdtable[j].len++] = conv[k];
-                                        free(conv);
+                                        for (int k = 0; k < l; k++) 
+					  defcpdtable[j].def[defcpdtable[j].len++] = conv[k];
+					if(conv != NULL){
+					  free(conv);
+					  conv = NULL;
+					}
                                     }
                                     piece = par + 1;
                                 }

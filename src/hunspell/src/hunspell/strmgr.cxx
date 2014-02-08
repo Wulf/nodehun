@@ -32,34 +32,18 @@ StrMgr::~StrMgr()
 
 char * StrMgr::getline() {
   if(done)
-    return NULL;
-
-  int size = 0,
-    curIndex = index;
-
+    return NULL;  
+  int curIndex = index,
+    i = 0;
   while(st[index] != '\n' && st[index] != '\0')
-  {
-    index++;
-    size++;
-  }
-
+    in[i++] = st[index++];
+  if(i == 0)
+    return NULL;
+  linenum++;
+  in[i] = st[index];
+  in[++i] = '\0';
   if(st[index] == '\0')
     done = true;
-  else
-    index++;
-
-  if(size == 0)
-    return getline();
-  linenum++;
-  int i = 0;
-  while(st[curIndex] != '\n' && st[curIndex] != '\r' && st[curIndex] != '\0')
-  {
-    if(st[curIndex] != '\r')
-      in[i++] = st[curIndex++];
-    else
-      curIndex++;
-  }
-  in[++i] = '\0';
   return in;
 }
 
