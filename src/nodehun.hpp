@@ -23,7 +23,7 @@ namespace Nodehun {
     bool callbackExists;
     bool success;
     std::string word;
-    Hunspell *spellClass;
+    Nodehun::SpellDictionary* obj;
   };
   //
   // represents a work baton to asynchronously add a new
@@ -36,7 +36,7 @@ namespace Nodehun {
     bool callbackExists;
     char * dict;
     bool success;
-    Hunspell *spellClass;
+    Nodehun::SpellDictionary* obj;
   };
   //
   // This is a baton for the asynchronous work of allowing
@@ -48,9 +48,9 @@ namespace Nodehun {
     v8::Persistent<v8::Function> callback;
     std::string word;
     bool multiple;
-    Hunspell *spellClass;
+    Nodehun::SpellDictionary* obj;
     bool wordCorrect;
-    char **suggestions;
+    char** suggestions;
     int numSuggest;
   };
 }
@@ -68,12 +68,15 @@ public:
   // The destructor!
   //
   ~SpellDictionary(){
-    if (spellClass != NULL)
+    if (spellClass){
       delete spellClass;
-    spellClass = NULL;
+      spellClass = NULL;
+    }
+    uv_mutex_destroy(&lock);
   };
   // The pointer to the Hunspell Object.
   Hunspell *spellClass;
+  uv_mutex_t lock;
 protected:
   //
   // When a new JS object is created

@@ -3,7 +3,6 @@
 
 
 #include "strmgr.hxx"
-
 int StrMgr::fail(const char * err, const char * par) {
   fprintf(stderr, err,par);
   return -1;
@@ -33,17 +32,18 @@ StrMgr::~StrMgr()
 char * StrMgr::getline() {
   if(done)
     return NULL;  
-  int curIndex = index,
-    i = 0;
-  while(st[index] != '\n' && st[index] != '\0')
+  int i = 0,
+    bufend = BUFSIZE + 49;
+  while(st[index] != '\n' && st[index] != '\0' && st[index] != EOF && i < bufend)
     in[i++] = st[index++];
   if(i == 0)
     return NULL;
   linenum++;
   in[i] = st[index];
   in[++i] = '\0';
-  if(st[index] == '\0')
+  if(st[index] == EOF)
     done = true;
+  index++;
   return in;
 }
 

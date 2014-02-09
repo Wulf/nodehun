@@ -24,6 +24,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
 }
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf){
+  uv_mutex_init(&lock);
   spellClass = new Hunspell(affbuf, dictbuf,NULL,true);
 }
 
@@ -63,7 +64,7 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggest(const Arguments& args) {
   spellData->callback = Persistent<Function>::New(callback);
   spellData->word.append(*arg0);
   
-  spellData->spellClass = obj->spellClass;
+  spellData->obj = obj;
   spellData->multiple = false;
   uv_queue_work(uv_default_loop(), &spellData->request,
 		Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
@@ -89,7 +90,7 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) 
   spellData->callback = Persistent<Function>::New(callback);
   spellData->word.append(*arg0);
   
-  spellData->spellClass = obj->spellClass;
+  spellData->obj = obj;
   spellData->multiple = true;
   uv_queue_work(uv_default_loop(), &spellData->request,
 		Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
@@ -98,11 +99,20 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) 
 
 void Nodehun::SpellDictionary::CheckSuggestions(uv_work_t* request) {
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-  spellData->wordCorrect = spellData->spellClass->spell(spellData->word.c_str());
+  uv_mutex_lock(&(spellData->obj->lock));
+  char** suggestions;
+  spellData->wordCorrect = spellData->obj->spellClass->spell(spellData->word.c_str());
   if (!spellData->wordCorrect)
-    spellData->numSuggest = spellData->spellClass->suggest(&(spellData->suggestions),spellData->word.c_str());
+    spellData->numSuggest = spellData->obj->spellClass->suggest(&suggestions, spellData->word.c_str());
   else
     spellData->numSuggest = 0;
+  spellData->suggestions = new char*[spellData->numSuggest];
+  for(int i = 0, l = spellData->numSuggest; i < l; i++){
+    spellData->suggestions[i] = new char[strlen(suggestions[i]) + 1];
+    strcpy(spellData->suggestions[i],suggestions[i]);
+  }
+  spellData->obj->spellClass->free_list(&suggestions,spellData->numSuggest);
+  uv_mutex_unlock(&(spellData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::SendSuggestions(uv_work_t* request, int i){
@@ -121,17 +131,17 @@ void Nodehun::SpellDictionary::SendSuggestions(uv_work_t* request, int i){
   else if(spellData->numSuggest > 0){
     if(spellData->multiple){
       Local<Array> suglist = Array::New(spellData->numSuggest);
-      for(int i = 0; i < spellData->numSuggest; i++)
+      for(int i = 0; i < spellData->numSuggest; i++){
 	suglist->Set(i,String::New(spellData->suggestions[i]));
+	delete spellData->suggestions[i];
+      }
+      delete spellData->suggestions;
       argv[1] = suglist;
     }
     else{
       argv[1] = String::New(spellData->suggestions[0]);
     }
-    spellData->spellClass->free_list(&(spellData->suggestions),spellData->numSuggest);
-    spellData->suggestions = NULL;
   }
-  
   TryCatch try_catch;
   spellData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
   if (try_catch.HasCaught())
@@ -158,8 +168,8 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
     dictData->callbackExists = true;
   }
   dictData->dict = new char[Buffer::Length(args[0]) + 1];
-  strcpy(dictData->dict,Buffer::Data(args[0].As<Object>()));
-  dictData->spellClass = obj->spellClass;
+  strcpy(dictData->dict, Buffer::Data(args[0].As<Object>()));
+  dictData->obj = obj;
   dictData->request.data = dictData;
 
   uv_queue_work(uv_default_loop(), &dictData->request,
@@ -169,8 +179,10 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
 
 void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request){
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
-  int status = dictData->spellClass->add_dic(dictData->dict, true);
+  uv_mutex_lock(&(dictData->obj->lock));
+  int status = dictData->obj->spellClass->add_dic(dictData->dict, true);
   dictData->success = status == 0;
+  uv_mutex_unlock(&(dictData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i){
@@ -212,7 +224,7 @@ Handle<Value> Nodehun::SpellDictionary::addWord(const Arguments& args) {
   //add word
   wordData->removeWord = false;
   wordData->word.append(*arg0);
-  wordData->spellClass = obj->spellClass;
+  wordData->obj = obj;
   wordData->request.data = wordData;
   
   uv_queue_work(uv_default_loop(), &wordData->request,
@@ -240,7 +252,7 @@ Handle<Value> Nodehun::SpellDictionary::removeWord(const Arguments& args) {
   //remove word
   wordData->removeWord = true;
   wordData->word.append(*arg0);
-  wordData->spellClass = obj->spellClass;
+  wordData->obj = obj;
   wordData->request.data = wordData;
   
   uv_queue_work(uv_default_loop(), &wordData->request,
@@ -250,12 +262,14 @@ Handle<Value> Nodehun::SpellDictionary::removeWord(const Arguments& args) {
 
 void Nodehun::SpellDictionary::addRemoveWordWork(uv_work_t* request){
   Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
+  uv_mutex_lock(&(wordData->obj->lock));
   int status;
   if(wordData->removeWord)
-    status = wordData->spellClass->remove(wordData->word.c_str());
+    status = wordData->obj->spellClass->remove(wordData->word.c_str());
   else
-    status = wordData->spellClass->add(wordData->word.c_str());
+    status = wordData->obj->spellClass->add(wordData->word.c_str());
   wordData->success = status == 0;
+  uv_mutex_unlock(&(wordData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i){
