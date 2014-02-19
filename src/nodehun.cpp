@@ -1,4 +1,5 @@
 #include "nodehun.hpp"
+#include <cstring>
 
 using namespace v8;
 using node::Buffer;
