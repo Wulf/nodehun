@@ -128,11 +128,11 @@ protected:
   // The work (threaded) to check to see if a given
   // string and if not what any possible suggestions might be.
   //
-  static void CheckSuggestions(uv_work_t* request);
+  static void checkSuggestions(uv_work_t* request);
   //
   // The call back to merge the thread that checked for spelling
   // suggestions from the dictionary object to return the result
   // of the work.
   //
-  static void SendSuggestions(uv_work_t* request, int i = -1);
+  static void sendSuggestions(uv_work_t* request, int i = -1);
 };

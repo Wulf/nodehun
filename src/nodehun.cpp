@@ -12,7 +12,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
   
   constructor = Persistent<FunctionTemplate>::New(tpl);
-  constructor->InstanceTemplate()->SetInternalFieldCount(5);
+  constructor->InstanceTemplate()->SetInternalFieldCount(7);
   constructor->SetClassName(String::NewSymbol("NodehunDictionary"));
   
   NODE_SET_PROTOTYPE_METHOD(constructor, "spellSuggest", spellSuggest);
@@ -20,6 +20,8 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(constructor,"addDictionary", addDictionary);
   NODE_SET_PROTOTYPE_METHOD(constructor,"addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(constructor,"removeWord", removeWord);
+  NODE_SET_PROTOTYPE_METHOD(constructor,"stem", removeWord);
+  NODE_SET_PROTOTYPE_METHOD(constructor,"generate", removeWord);
   
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
@@ -68,7 +70,7 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggest(const Arguments& args) {
   spellData->obj = obj;
   spellData->multiple = false;
   uv_queue_work(uv_default_loop(), &spellData->request,
-		Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
+		Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
   return Undefined();
 }
 
@@ -94,11 +96,11 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) 
   spellData->obj = obj;
   spellData->multiple = true;
   uv_queue_work(uv_default_loop(), &spellData->request,
-		Nodehun::SpellDictionary::CheckSuggestions, Nodehun::SpellDictionary::SendSuggestions);
+		Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
   return Undefined();
 }
 
-void Nodehun::SpellDictionary::CheckSuggestions(uv_work_t* request) {
+void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) {
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
   uv_mutex_lock(&(spellData->obj->lock));
   char** suggestions;
@@ -116,7 +118,7 @@ void Nodehun::SpellDictionary::CheckSuggestions(uv_work_t* request) {
   uv_mutex_unlock(&(spellData->obj->lock));
 }
 
-void Nodehun::SpellDictionary::SendSuggestions(uv_work_t* request, int i){
+void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i){
   HandleScope scope;
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
   
