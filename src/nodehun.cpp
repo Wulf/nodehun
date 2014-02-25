@@ -27,7 +27,6 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
 }
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf){
-  uv_mutex_init(&lock);
   spellClass = new Hunspell(affbuf, dictbuf,NULL,true);
 }
 
@@ -102,7 +101,6 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) 
 
 void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) {
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-  uv_mutex_lock(&(spellData->obj->lock));
   char** suggestions;
   spellData->wordCorrect = spellData->obj->spellClass->spell(spellData->word.c_str());
   if (!spellData->wordCorrect)
@@ -115,7 +113,6 @@ void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) {
     strcpy(spellData->suggestions[i],suggestions[i]);
   }
   spellData->obj->spellClass->free_list(&suggestions,spellData->numSuggest);
-  uv_mutex_unlock(&(spellData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i){
@@ -182,10 +179,8 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args) {
 
 void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request){
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
-  uv_mutex_lock(&(dictData->obj->lock));
   int status = dictData->obj->spellClass->add_dic(dictData->dict, true);
   dictData->success = status == 0;
-  uv_mutex_unlock(&(dictData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i){
@@ -265,14 +260,12 @@ Handle<Value> Nodehun::SpellDictionary::removeWord(const Arguments& args) {
 
 void Nodehun::SpellDictionary::addRemoveWordWork(uv_work_t* request){
   Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
-  uv_mutex_lock(&(wordData->obj->lock));
   int status;
   if(wordData->removeWord)
     status = wordData->obj->spellClass->remove(wordData->word.c_str());
   else
     status = wordData->obj->spellClass->add(wordData->word.c_str());
   wordData->success = status == 0;
-  uv_mutex_unlock(&(wordData->obj->lock));
 }
 
 void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i){

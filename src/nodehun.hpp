@@ -72,11 +72,9 @@ public:
       delete spellClass;
       spellClass = NULL;
     }
-    uv_mutex_destroy(&lock);
   };
   // The pointer to the Hunspell Object.
   Hunspell *spellClass;
-  uv_mutex_t lock;
 protected:
   //
   // When a new JS object is created
