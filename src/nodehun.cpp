@@ -312,7 +312,6 @@ Handle<Value> Nodehun::SpellDictionary::analyze(const Arguments& args) {
   uv_queue_work(uv_default_loop(), &analyzeData->request,
 		Nodehun::SpellDictionary::analyzeWork, Nodehun::SpellDictionary::analyzeFinish);
   return Undefined();
-
 }
 
 void Nodehun::SpellDictionary::analyzeWork(uv_work_t* request){
@@ -383,8 +382,8 @@ Handle<Value> Nodehun::SpellDictionary::stem(const Arguments& args) {
   uv_queue_work(uv_default_loop(), &stemData->request,
 		Nodehun::SpellDictionary::stemWork, Nodehun::SpellDictionary::stemFinish);
   return Undefined();
-
 }
+
 void Nodehun::SpellDictionary::stemWork(uv_work_t* request){
   Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
   stemData->numResults = stemData->obj->spellClass->stem(&stemData->results, stemData->words, stemData->numWords);
@@ -418,17 +417,5 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i){
   }
   delete stemData;
 }
-/*
-Handle<Value> Nodehun::SpellDictionary::generate(const Arguments& args) {
 
-}
-
-void Nodehun::SpellDictionary::generateWork(uv_work_t* request){
-
-}
-
-void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i){
-
-}
-*/
 NODE_MODULE(nodehun, Nodehun::SpellDictionary::Init);

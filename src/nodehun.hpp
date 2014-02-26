@@ -181,17 +181,5 @@ protected:
   //
   // Join thread and return stemming results
   //
-  static void stemFinish(uv_work_t* request, int i);/*
-  //
-  // Generate stemming information from work
-  //
-  static v8::Handle<v8::Value> generate(const v8::Arguments& args);
-  //
-  // Threaded generate work
-  //
-  static void generateWork(uv_work_t* request);
-  //
-  // Join generate work results to ui thread.
-  //
-  static void generateFinish(uv_work_t* request, int i);*/
+  static void stemFinish(uv_work_t* request, int i);
 };
