@@ -53,6 +53,18 @@ namespace Nodehun {
     char** suggestions;
     int numSuggest;
   };
+  //
+  // This is a baton for the obtaining analyze data.
+  //
+  struct AnalyzeData{
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    bool callbackExists;
+    std::string word;
+    Nodehun::SpellDictionary *obj;
+    char** results;
+    int numResults;
+  };
 }
 
 class Nodehun::SpellDictionary : public node::ObjectWrap {
@@ -133,4 +145,40 @@ protected:
   // of the work.
   //
   static void sendSuggestions(uv_work_t* request, int i = -1);
+  //
+  // The node function to call to analyze a word's stems
+  //
+  static v8::Handle<v8::Value> analyze(const v8::Arguments& args);
+  //
+  // Threaded work on hunspell to analyze a word's stems
+  //
+  static void analyzeWork(uv_work_t* request);
+  //
+  // Join thread and return stems from the hunspell work
+  //
+  static void analyzeFinish(uv_work_t* request, int i);/*
+  //
+  // node wrapped hunspell stem function
+  //
+  static v8::Handle<v8::Value> stem(const v8::Arguments& args);
+  //
+  // Threaded work on hunspell to get stem results from hunspell
+  //
+  void stemWork(uv_work_t* request);
+  //
+  // Join thread and return stemming results
+  //
+  void stemFinish(uv_work_t* request, int i);
+  //
+  // Generate stemming information from work
+  //
+  v8::Handle<v8::Value> generate(const v8::Arguments& args);
+  //
+  // Threaded generate work
+  //
+  void generateWork(uv_work_t* request);
+  //
+  // Join generate work results to ui thread.
+  //
+  void generateFinish(uv_work_t* request, int i);*/
 };
