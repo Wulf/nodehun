@@ -12,7 +12,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
   
   constructor = Persistent<FunctionTemplate>::New(tpl);
-  constructor->InstanceTemplate()->SetInternalFieldCount(5);
+  constructor->InstanceTemplate()->SetInternalFieldCount(6);
   constructor->SetClassName(String::NewSymbol("NodehunDictionary"));
   
   NODE_SET_PROTOTYPE_METHOD(constructor, "spellSuggest", spellSuggest);
@@ -21,8 +21,8 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(constructor,"addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(constructor,"removeWord", removeWord);
   NODE_SET_PROTOTYPE_METHOD(constructor,"analyze", analyze);
-  //  NODE_SET_PROTOTYPE_METHOD(constructor,"stem", stem);
-  //  NODE_SET_PROTOTYPE_METHOD(constructor,"generate", generate);
+  NODE_SET_PROTOTYPE_METHOD(constructor,"stem", stem);
+  //NODE_SET_PROTOTYPE_METHOD(constructor,"generate", generate);
   
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
@@ -339,44 +339,86 @@ void Nodehun::SpellDictionary::analyzeFinish(uv_work_t* request, int i){
       node::FatalException(try_catch);
     analyzeData->callback.Dispose();
   }
+  else{
+    analyzeData->obj->spellClass->free_list(&analyzeData->results,analyzeData->numResults);
+  }
   delete analyzeData;
 }
-/*
+
 Handle<Value> Nodehun::SpellDictionary::stem(const Arguments& args) {
   HandleScope scope;  
-  if (args.Length() < 1 || !args[0]->IsString())
-    return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
+  if (args.Length() < 1 || !args[0]->IsArray())
+    return ThrowException(Exception::TypeError(String::New("First argument must be an array.")));
 
   Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
-  String::Utf8Value arg0(args[0]->ToString());
-  Nodehun::WordData* wordData = new Nodehun::WordData();
+  Local<Array> arg0 = Local<Array>::Cast(args[0]);
+  int l = arg0->Length();
+  char **words = new char*[l];
+  int numWords = 0;
+  Local<Value> val;
+  for(int i = 0; i < l; i++){
+    Local<Value> val = arg0->Get(i);
+    if(val->IsString()){
+      v8::String::Utf8Value str(val->ToString());
+      words[i] = new char[str.length()];
+      strcpy(words[i], *str);
+      numWords++;
+    }
+  }
+  Nodehun::StemData* stemData = new Nodehun::StemData();
+  stemData->words = words;
+  stemData->numWords = numWords;
   if(args.Length() > 1 && args[1]->IsFunction()){
     Local<Function> callback = Local<Function>::Cast(args[1]);
-    wordData->callback = Persistent<Function>::New(callback);
-    wordData->callbackExists = true;
+    stemData->callback = Persistent<Function>::New(callback);
+    stemData->callbackExists = true;
   }
   else{
-    wordData->callbackExists = false;
+    stemData->callbackExists = false;
   }
-  //remove word
-  analyzeData->removeWord = true;
-  analyzeData->word.append(*arg0);
-  analyzeData->obj = obj;
-  analyzeData->request.data = wordData;
+
+  stemData->obj = obj;
+  stemData->request.data = stemData;
   
-  uv_queue_work(uv_default_loop(), &wordData->request,
-		Nodehun::SpellDictionary::addRemoveWordWork, Nodehun::SpellDictionary::addRemoveWordFinish);
+  uv_queue_work(uv_default_loop(), &stemData->request,
+		Nodehun::SpellDictionary::stemWork, Nodehun::SpellDictionary::stemFinish);
   return Undefined();
 
 }
 void Nodehun::SpellDictionary::stemWork(uv_work_t* request){
-
+  Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
+  stemData->numResults = stemData->obj->spellClass->stem(&stemData->results, stemData->words, stemData->numWords);
+  for(int i = 0; i < stemData->numWords; i++)
+    delete stemData->words[i];
+  delete stemData->words;
 }
 
 void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i){
-
+  HandleScope scope;
+  Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
+  
+  if(stemData->callbackExists){
+    const unsigned int argc = 1;
+    Local<Value> argv[argc];
+    Local<Array> suglist = Array::New(stemData->numResults);
+    int i;
+    for(i = 0; i < stemData->numResults; i++)
+      suglist->Set(i,String::New(stemData->results[i]));
+    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
+    argv[0] = suglist;
+    TryCatch try_catch;
+    stemData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  
+    if(try_catch.HasCaught())
+      node::FatalException(try_catch);
+    stemData->callback.Dispose();
+  }
+  else{
+    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
+  }
+  delete stemData;
 }
-
+/*
 Handle<Value> Nodehun::SpellDictionary::generate(const Arguments& args) {
 
 }
