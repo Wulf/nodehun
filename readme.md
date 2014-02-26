@@ -139,6 +139,7 @@ Nodehun can also remove a single word from a dictionary at runtime (this means i
 Stemming and Analyzing
 ----------------------
 For people who want to use the advance functionality of hunspell (stemming and anlysis), it is exposed in nodehun, but you really need to dig in to the hunspell documentation in order to understand how to use it. Here's what the signatures look like though.
+
 	var nodehun = require('nodehun');
 	var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 	var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
