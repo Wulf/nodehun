@@ -1,6 +1,6 @@
 #include "nodehun.hpp"
 #include <cstring>
-#include <iostream>
+
 using namespace v8;
 using node::Buffer;
 
@@ -22,7 +22,6 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(constructor,"removeWord", removeWord);
   NODE_SET_PROTOTYPE_METHOD(constructor,"analyze", analyze);
   NODE_SET_PROTOTYPE_METHOD(constructor,"stem", stem);
-  //NODE_SET_PROTOTYPE_METHOD(constructor,"generate", generate);
   
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
