@@ -53,6 +53,19 @@ namespace Nodehun {
     char** suggestions;
     int numSuggest;
   };
+  //
+  // This is a baton for obtaining stem data.
+  //
+  struct StemData{
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    bool callbackExists;
+    Nodehun::SpellDictionary *obj;
+    std::string word;
+    char** results;
+    int numResults;
+  };
+
 }
 
 class Nodehun::SpellDictionary : public node::ObjectWrap {
@@ -133,4 +146,17 @@ protected:
   // of the work.
   //
   static void sendSuggestions(uv_work_t* request, int i = -1);
+  //
+  // node wrapped hunspell stem function
+  //
+  static v8::Handle<v8::Value> stem(const v8::Arguments& args);
+  //
+  // Threaded work on hunspell to get stem results from hunspell
+  //
+  static void stemWork(uv_work_t* request);
+  //
+  // Join thread and return stemming results
+  //
+  static void stemFinish(uv_work_t* request, int i);
+
 };

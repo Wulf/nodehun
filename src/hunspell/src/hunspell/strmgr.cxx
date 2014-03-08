@@ -31,18 +31,21 @@ StrMgr::~StrMgr()
 
 char * StrMgr::getline() {
   if(done)
-    return NULL;  
-  int i = 0,
-    bufend = BUFSIZE + 49;
-  while(st[index] != '\n' && st[index] != '\0' && st[index] != EOF && i < bufend)
-    in[i++] = st[index++];
-  if(i == 0)
     return NULL;
-  linenum++;
-  in[i] = st[index];
-  in[++i] = '\0';
-  if(st[index] == EOF)
+  int i = 0;
+  for(; st[index] != '\n' && st[index] != EOF && st[index] != '\0' && i < BUFSIZE - 1; i++, index++)
+    in[i] = st[index];
+  if(st[index] == EOF || st[index] == '\0' && i == 0){
     done = true;
+    return NULL;
+  }
+  if(i == BUFSIZE - 1)
+    in[0] = '\0';
+  else
+    in[i] = st[index];
+  done = st[index] == EOF || st[index] == '\0';
+  in[i + 1] = '\0';
+  linenum++;
   index++;
   return in;
 }

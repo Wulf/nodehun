@@ -12,7 +12,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
   
   constructor = Persistent<FunctionTemplate>::New(tpl);
-  constructor->InstanceTemplate()->SetInternalFieldCount(5);
+  constructor->InstanceTemplate()->SetInternalFieldCount(6);
   constructor->SetClassName(String::NewSymbol("NodehunDictionary"));
   
   NODE_SET_PROTOTYPE_METHOD(constructor, "spellSuggest", spellSuggest);
@@ -20,6 +20,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(constructor,"addDictionary", addDictionary);
   NODE_SET_PROTOTYPE_METHOD(constructor,"addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(constructor,"removeWord", removeWord);
+  NODE_SET_PROTOTYPE_METHOD(constructor,"stem", stem);
   
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
@@ -286,4 +287,65 @@ void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i){
   delete wordData;
 }
 
+Handle<Value> Nodehun::SpellDictionary::stem(const Arguments& args) {
+  HandleScope scope;  
+  if (args.Length() < 1 || !args[0]->IsString())
+    return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
+
+  Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+  Nodehun::StemData* stemData = new Nodehun::StemData();
+  v8::String::Utf8Value arg0(args[0]->ToString());
+
+  stemData->word.append(*arg0);
+  if(args.Length() > 1 && args[1]->IsFunction()){
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+    stemData->callback = Persistent<Function>::New(callback);
+    stemData->callbackExists = true;
+  }
+  else{
+    stemData->callbackExists = false;
+  }
+
+  stemData->obj = obj;
+  stemData->request.data = stemData;
+  
+  uv_queue_work(uv_default_loop(), &stemData->request,
+		Nodehun::SpellDictionary::stemWork, Nodehun::SpellDictionary::stemFinish);
+  return Undefined();
+}
+
+void Nodehun::SpellDictionary::stemWork(uv_work_t* request){
+  Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
+  stemData->numResults = stemData->obj->spellClass->stem(&stemData->results, stemData->word.c_str());
+}
+
+void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i){
+  HandleScope scope;
+  Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
+  
+  if(stemData->callbackExists){
+    const unsigned int argc = 1;
+    Local<Value> argv[argc];
+    Local<Array> suglist = Array::New(stemData->numResults);
+    int i;
+    for(i = 0; i < stemData->numResults; i++)
+      suglist->Set(i,String::New(stemData->results[i]));
+    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
+    argv[0] = suglist;
+    TryCatch try_catch;
+    stemData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  
+    if(try_catch.HasCaught())
+      node::FatalException(try_catch);
+    stemData->callback.Dispose();
+  }
+  else{
+    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
+  }
+  delete stemData;
+}
+
+
 NODE_MODULE(nodehun, Nodehun::SpellDictionary::Init);
+
+
