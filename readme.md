@@ -136,6 +136,21 @@ Nodehun can also remove a single word from a dictionary at runtime (this means i
 		
 	});
 
+Stem
+----
+Nodehun exposes the Hunspell `stem` function which analyzes the roots of words. Consult the Hunspell documentation for further understanding.
+	
+	var nodehun = require('nodehun');
+	var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
+	var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
+	var dict = new nodehun(affbuf,dictbuf);
+	
+	dict.stem('telling',function(a){
+		console.log(a);
+		// the output will be: [telling, tell]
+	});
+	
+
 A Note About Creating Dictionaries
 ----------------------------------
 
