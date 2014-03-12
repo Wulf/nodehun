@@ -59,13 +59,22 @@ namespace Nodehun {
   struct StemData{
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
-    bool callbackExists;
     Nodehun::SpellDictionary *obj;
     std::string word;
     char** results;
     int numResults;
   };
-
+  //
+  // represents a work baton to asynchronously create a new
+  // nodehun instance. 
+  //
+  struct NodehunData {
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    char * aff;
+    char * dict;
+    Nodehun::SpellDictionary *obj;
+  };
 }
 
 class Nodehun::SpellDictionary : public node::ObjectWrap {
@@ -90,9 +99,14 @@ public:
   Hunspell *spellClass;
 protected:
   //
+  // Creates a new nodehun, asynchronously
+  //
+  static v8::Handle<v8::Value> createNewNodehun(const v8::Arguments& args);
+  //
   // When a new JS object is created
   //
   static v8::Handle<v8::Value> New(const v8::Arguments& args);
+  static v8::Handle<v8::Value> New();
   //
   // Suggest a singularly correct spelling from a string.
   //
@@ -114,6 +128,14 @@ protected:
   // Remove a word from a dictionary object at runtime (ephemerally).
   //
   static v8::Handle<v8::Value> removeWord(const v8::Arguments& args);
+  //
+  // new nodehun work
+  //
+  static void createNewNodehunWork(uv_work_t* request);  
+  //
+  // new nodehun finish
+  //
+  static void createNewNodehunFinish(uv_work_t* request, int i = -1);
   //
   // The work (threaded) functionality to add a new dictionary
   // to the current dictionary object.

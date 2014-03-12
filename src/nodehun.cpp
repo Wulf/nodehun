@@ -1,6 +1,6 @@
 #include "nodehun.hpp"
 #include <cstring>
-
+#include <iostream>
 using namespace v8;
 using node::Buffer;
 
@@ -10,11 +10,13 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   HandleScope scope;
   
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  
+
   constructor = Persistent<FunctionTemplate>::New(tpl);
-  constructor->InstanceTemplate()->SetInternalFieldCount(6);
+  constructor->InstanceTemplate()->SetInternalFieldCount(7);
   constructor->SetClassName(String::NewSymbol("NodehunDictionary"));
-  
+  //static
+  NODE_SET_METHOD(constructor, "createNewNodehun" , createNewNodehun);    
+  //prototype
   NODE_SET_PROTOTYPE_METHOD(constructor, "spellSuggest", spellSuggest);
   NODE_SET_PROTOTYPE_METHOD(constructor, "spellSuggestions", spellSuggestions);
   NODE_SET_PROTOTYPE_METHOD(constructor,"addDictionary", addDictionary);
@@ -25,6 +27,50 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
 
+Handle<Value> Nodehun::SpellDictionary::createNewNodehun(const v8::Arguments& args){
+  HandleScope scope;
+  int argl = args.Length();
+  if(argl < 1 || !Buffer::HasInstance(args[0]))
+    return ThrowException(Exception::TypeError(String::New("First argument must be a buffer")));
+  if(argl < 2 || !Buffer::HasInstance(args[1]))
+    return ThrowException(Exception::TypeError(String::New("Second argument must be a buffer")));
+  if(argl > 2 && args[2]->IsFunction()){      
+    Nodehun::NodehunData* nodeData = new Nodehun::NodehunData();
+    nodeData->callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+    nodeData->aff = new char[Buffer::Length(args[0]) + 1];
+    strcpy(nodeData->aff, Buffer::Data(args[0].As<Object>()));
+    nodeData->dict = new char[Buffer::Length(args[1]) + 1];
+    strcpy(nodeData->dict, Buffer::Data(args[1].As<Object>()));
+    nodeData->request.data = nodeData;
+    uv_queue_work(uv_default_loop(), &nodeData->request,
+		  Nodehun::SpellDictionary::createNewNodehunWork, Nodehun::SpellDictionary::createNewNodehunFinish);
+  }
+  return Undefined();
+}
+
+void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request){
+  Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
+  nodeData->obj = new SpellDictionary(nodeData->aff, nodeData->dict);
+  delete nodeData->aff;
+  delete nodeData->dict;
+}
+
+void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i){
+  HandleScope scope;
+  Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);  
+  const unsigned argc = 1;
+  Local<Value> argv[argc];
+  Handle<Value> ext = External::New(nodeData->obj);
+  argv[0] = constructor->GetFunction()->NewInstance(1, &ext);
+  TryCatch try_catch;
+  nodeData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  if (try_catch.HasCaught())
+    node::FatalException(try_catch);
+  nodeData->callback.Dispose();
+  delete nodeData;
+}
+
+
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf){
   spellClass = new Hunspell(affbuf, dictbuf,NULL,true);
 }
@@ -34,67 +80,68 @@ Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args) {
   int argl = args.Length();
   if (!args.IsConstructCall())
     return ThrowException(Exception::Error(String::New("Use the new operator to create an instance of this object.")));
-  if(argl < 2)
-    return ThrowException(Exception::Error(String::New("Constructor requires two arguments.")));
-  if(!Buffer::HasInstance(args[0]))
-    return ThrowException(Exception::TypeError(String::New("First argument must be a buffer")));
-  if(!Buffer::HasInstance(args[1]))
-    return ThrowException(Exception::TypeError(String::New("Second argument must be a buffer")));
+  if(argl > 0 && args[0]->IsExternal()){
+    Local<External> ext = Local<External>::Cast(args[0]);
+    void *ptr = ext->Value();
+    Nodehun::SpellDictionary *obj = static_cast<Nodehun::SpellDictionary *>(ptr);
+    obj->Wrap(args.This());
+  }
+  else{
+    if(argl < 2)
+      return ThrowException(Exception::Error(String::New("Constructor requires two arguments.")));
+    if(!Buffer::HasInstance(args[0]))
+      return ThrowException(Exception::TypeError(String::New("First argument must be a buffer")));
+    if(!Buffer::HasInstance(args[1]))
+      return ThrowException(Exception::TypeError(String::New("Second argument must be a buffer")));
 
-  Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(Buffer::Data(args[0].As<Object>()), Buffer::Data(args[1].As<Object>()));
-  obj->Wrap(args.This());  
+    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(Buffer::Data(args[0].As<Object>()), Buffer::Data(args[1].As<Object>()));
+    obj->Wrap(args.This());  
+  }
   return args.This();
 }
 
 Handle<Value> Nodehun::SpellDictionary::spellSuggest(const Arguments& args) {
   HandleScope scope;
-  if (args.Length() < 2) 
-    return ThrowException(Exception::TypeError(String::New("Missing required arguments.")));
-  if(!args[0]->IsString())
-    return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
-  if(!args[1]->IsFunction())
-    return ThrowException(Exception::TypeError(String::New("Second argument must be a function.")));
+  int argl = args.Length();
 
-  Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
-  
-  String::Utf8Value arg0(args[0]->ToString());
-  Local<Function> callback = Local<Function>::Cast(args[1]);
-  
-  Nodehun::SpellData* spellData = new Nodehun::SpellData();
-  spellData->request.data = spellData;
-  spellData->callback = Persistent<Function>::New(callback);
-  spellData->word.append(*arg0);
-  
-  spellData->obj = obj;
-  spellData->multiple = false;
-  uv_queue_work(uv_default_loop(), &spellData->request,
-		Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
+  if(argl < 1 || !args[0]->IsString())
+    return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
+
+  if(argl > 1 && args[1]->IsFunction()){
+    Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+    Nodehun::SpellData* spellData = new Nodehun::SpellData();  
+    String::Utf8Value arg0(args[0]->ToString());
+
+    spellData->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+    spellData->request.data = spellData;
+    spellData->word.append(*arg0);
+    spellData->obj = obj;
+    spellData->multiple = false;
+    uv_queue_work(uv_default_loop(), &spellData->request,
+		  Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
+  }
   return Undefined();
 }
 
 Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args) {
   HandleScope scope;
-  if (args.Length() < 2) 
-    return ThrowException(Exception::TypeError(String::New("Missing required arguments.")));
-  if(!args[0]->IsString())
+  int argl = args.Length();
+  if(argl < 1 || !args[0]->IsString())
     return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
-  if(!args[1]->IsFunction())
-    return ThrowException(Exception::TypeError(String::New("Second argument must be a function.")));
+  
+  if(argl > 1 && args[1]->IsFunction()){
+    Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+    Nodehun::SpellData* spellData = new Nodehun::SpellData();
+    String::Utf8Value arg0(args[0]->ToString());  
 
-  Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
-  
-  String::Utf8Value arg0(args[0]->ToString());
-  Local<Function> callback = Local<Function>::Cast(args[1]);
-  
-  Nodehun::SpellData* spellData = new Nodehun::SpellData();
-  spellData->request.data = spellData;
-  spellData->callback = Persistent<Function>::New(callback);
-  spellData->word.append(*arg0);
-  
-  spellData->obj = obj;
-  spellData->multiple = true;
-  uv_queue_work(uv_default_loop(), &spellData->request,
-		Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
+    spellData->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+    spellData->request.data = spellData;
+    spellData->word.append(*arg0);
+    spellData->obj = obj;
+    spellData->multiple = true;
+    uv_queue_work(uv_default_loop(), &spellData->request,
+		  Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
+  }
   return Undefined();
 }
 
@@ -289,28 +336,23 @@ void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i){
 
 Handle<Value> Nodehun::SpellDictionary::stem(const Arguments& args) {
   HandleScope scope;  
-  if (args.Length() < 1 || !args[0]->IsString())
+  int argl = args.Length();
+  if (argl < 1 || !args[0]->IsString())
     return ThrowException(Exception::TypeError(String::New("First argument must be a string.")));
 
-  Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
-  Nodehun::StemData* stemData = new Nodehun::StemData();
-  v8::String::Utf8Value arg0(args[0]->ToString());
+  if(argl > 1 && args[1]->IsFunction()){
+    Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+    Nodehun::StemData* stemData = new Nodehun::StemData();
+    v8::String::Utf8Value arg0(args[0]->ToString());
 
-  stemData->word.append(*arg0);
-  if(args.Length() > 1 && args[1]->IsFunction()){
-    Local<Function> callback = Local<Function>::Cast(args[1]);
-    stemData->callback = Persistent<Function>::New(callback);
-    stemData->callbackExists = true;
-  }
-  else{
-    stemData->callbackExists = false;
-  }
-
-  stemData->obj = obj;
-  stemData->request.data = stemData;
-  
-  uv_queue_work(uv_default_loop(), &stemData->request,
+    stemData->word.append(*arg0);
+    stemData->callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+    stemData->obj = obj;
+    stemData->request.data = stemData;
+    
+    uv_queue_work(uv_default_loop(), &stemData->request,
 		Nodehun::SpellDictionary::stemWork, Nodehun::SpellDictionary::stemFinish);
+  }
   return Undefined();
 }
 
@@ -323,25 +365,21 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i){
   HandleScope scope;
   Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
   
-  if(stemData->callbackExists){
-    const unsigned int argc = 1;
-    Local<Value> argv[argc];
-    Local<Array> suglist = Array::New(stemData->numResults);
-    int i;
-    for(i = 0; i < stemData->numResults; i++)
-      suglist->Set(i,String::New(stemData->results[i]));
-    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
-    argv[0] = suglist;
-    TryCatch try_catch;
-    stemData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  const unsigned int argc = 1;
+  Local<Value> argv[argc];
+  Local<Array> suglist = Array::New(stemData->numResults);
+  int t;
+  for(t = 0; i < stemData->numResults; t++)
+    suglist->Set(t,String::New(stemData->results[t]));
+  stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
+  argv[0] = suglist;
+  TryCatch try_catch;
+  stemData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
   
-    if(try_catch.HasCaught())
-      node::FatalException(try_catch);
-    stemData->callback.Dispose();
-  }
-  else{
-    stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
-  }
+  if(try_catch.HasCaught())
+    node::FatalException(try_catch);
+  stemData->callback.Dispose();
+
   delete stemData;
 }
 
