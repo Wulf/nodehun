@@ -150,7 +150,22 @@ Nodehun exposes the Hunspell `stem` function which analyzes the roots of words. 
 		// the output will be: [telling, tell]
 	});
 	
+Asynchronous Invocation
+-----------------------
+Initializing the nodehun object can be bumpy if you're doing it a lot. A large dictionary can take up to 100ms to initialize. This is obviously unacceptable in applications that need on-the-fly dictionary creation. Therefore there is a static method on the nodehun object that allows you to initialize the dictionary object asynchronously, like so:
 
+	var nodehun = require('nodehun');
+	var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
+	var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
+	
+	nodehun.createNewNodehun(affbuf,dictbuf,function(dict){
+		dict.spellSuggest('color',function(a,b){
+			console.log(a,b);
+			// because "color" is a defined word in the US English dictionary
+			// the output will be: true, null
+		});
+	});	
+	
 A Note About Creating Dictionaries
 ----------------------------------
 
