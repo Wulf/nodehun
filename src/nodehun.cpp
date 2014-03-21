@@ -1,6 +1,5 @@
 #include "nodehun.hpp"
 #include <cstring>
-#include <iostream>
 using namespace v8;
 using node::Buffer;
 
