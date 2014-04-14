@@ -49,7 +49,7 @@ Handle<Value> Nodehun::SpellDictionary::createNewNodehun(const v8::Arguments& ar
 
 void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request){
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
-  nodeData->obj = new SpellDictionary(nodeData->aff, nodeData->dict);
+  nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL, true);
   delete nodeData->aff;
   delete nodeData->dict;
 }
@@ -71,7 +71,11 @@ void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
 
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf){
-  spellClass = new Hunspell(affbuf, dictbuf,NULL,true);
+  spellClass = new Hunspell(affbuf, dictbuf, NULL, true);
+}
+
+Nodehun::SpellDictionary::SpellDictionary(Hunspell *obj){
+  spellClass = obj;
 }
 
 Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args) {
@@ -82,7 +86,7 @@ Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args) {
   if(argl > 0 && args[0]->IsExternal()){
     Local<External> ext = Local<External>::Cast(args[0]);
     void *ptr = ext->Value();
-    Nodehun::SpellDictionary *obj = static_cast<Nodehun::SpellDictionary *>(ptr);
+    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(static_cast<Hunspell*>(ptr));
     obj->Wrap(args.This());
   }
   else{
@@ -153,9 +157,9 @@ void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) {
   else
     spellData->numSuggest = 0;
   spellData->suggestions = new char*[spellData->numSuggest];
-  for(int i = 0, l = spellData->numSuggest; i < l; i++){
-    spellData->suggestions[i] = new char[strlen(suggestions[i]) + 1];
-    strcpy(spellData->suggestions[i],suggestions[i]);
+  for(int t = 0, l = spellData->numSuggest; t < l; t++){
+    spellData->suggestions[t] = new char[strlen(suggestions[t]) + 1];
+    strcpy(spellData->suggestions[t],suggestions[t]);
   }
   spellData->obj->spellClass->free_list(&suggestions,spellData->numSuggest);
 }
@@ -176,9 +180,9 @@ void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i){
   else if(spellData->numSuggest > 0){
     if(spellData->multiple){
       Local<Array> suglist = Array::New(spellData->numSuggest);
-      for(int i = 0; i < spellData->numSuggest; i++){
-	suglist->Set(i,String::New(spellData->suggestions[i]));
-	delete spellData->suggestions[i];
+      for(int t = 0; t < spellData->numSuggest; t++){
+	suglist->Set(t,String::New(spellData->suggestions[t]));
+	delete spellData->suggestions[t];
       }
       delete spellData->suggestions;
       argv[1] = suglist;
@@ -367,8 +371,8 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i){
   const unsigned int argc = 1;
   Local<Value> argv[argc];
   Local<Array> suglist = Array::New(stemData->numResults);
-  int t;
-  for(t = 0; i < stemData->numResults; t++)
+
+  for(int t = 0; t < stemData->numResults; t++)
     suglist->Set(t,String::New(stemData->results[t]));
   stemData->obj->spellClass->free_list(&stemData->results,stemData->numResults);
   argv[0] = suglist;
