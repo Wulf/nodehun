@@ -1,6 +1,6 @@
 {
   "name": "nodehun",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features. Hunspell is a first class spellcheck api used by Google, Apple, and Mozilla.",
   "main": "build/Release/nodehun",
   "directories": {
@@ -14,8 +14,9 @@
     "url": "https://github.com/nathanjsweet/nodehun.git"
   },
   "keywords": [
-    "spellcheck",
     "spell",
+    "spellcheck",
+    "spellchecker",
     "hunspell"
   ],
   "author": "Nathan Sweet",
