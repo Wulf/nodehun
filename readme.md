@@ -51,7 +51,7 @@ dict.spellSuggestions('color',function(a,b){
 	// the output will be: true, []
 });
 
-dict.spellSuggest('calor',function(a,b){
+dict.spellSuggestions('calor',function(a,b){
 	console.log(a,b);
 	// because "calor" is not a defined word in the US English dictionary
 	// the output will be: false, [ 'carol','valor','color','cal or','cal-or','caloric','calorie']
