@@ -2,7 +2,7 @@ Nodehun
 =======
 Warning on Versions
 -------------------
-The current versions of nodehun (1.XX.XX) supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Where possible the 0 and 1 version will have the same bug fixes. Here is an example of how they would differ:
+~~The current versions of nodehun (1.XX.XX) supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Where possible the 0 and 1 version will have the same bug fixes. Here is an example of how they would differ~~ What is crossed out will be true, soon. Right now these changes are being tested. The old/stable version of nodehun is 0.2.6 and the unstable/new-signature version is 0.2.5, this is how they differ, and the documentation hereafter reflects the new signature documentation:
 
 ```js
 //0.XX.XX version:
