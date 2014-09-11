@@ -10,8 +10,20 @@ var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic');
 var timeInit = time();
 var dict = new nodehun(affbuf,dictbuf);
 console.log('time to initialize dictionary class:',time() - timeInit,unit);
-dict.spellSuggest('Tacoma',function(a,b){console.log('misspelling "Tacoma"',a,b,'time to receive result:',time() - timeInit,unit)});
-dict.spellSuggestions('calor',function(a,b){console.log('misspelling "calor"',a,b)});
+dict.spellSuggest('Tacoma',function(err,a,b){
+    if(!err)
+	console.log('misspelling "Tacoma"',a,b,'time to receive result:',time() - timeInit,unit)
+});
+dict.spellSuggestions('calor',function(err,a,b){
+    if(!err)
+	console.log('misspelling "calor"',a,b)
+});
 
-dict.spellSuggest('color',function(a,b){console.log('correct "color"',a,b)});
-dict.spellSuggestions('color',function(a,b){console.log('correct "color"',a,b)});
+dict.spellSuggest('color',function(err,a,b){
+    if(!err)
+	console.log('correct "color"',a,b)
+});
+dict.spellSuggestions('color',function(err,a,b){
+    if(!err)
+	console.log('correct "color"',a,b)
+});

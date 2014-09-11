@@ -1,5 +1,23 @@
 Nodehun
 =======
+Warning on Versions
+-------------------
+The current versions of nodehun (1.XX.XX) supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Where possible the 0 and 1 version will have the same bug fixes. Here is an example of how they would differ:
+
+```js
+//0.XX.XX version:
+dict.addWord('foo',function(success, word){
+   console.log(success, word);
+   // if the method succeeded then
+   // the output will be : true, 'foo'
+n}); 
+//1.XX.XX version:
+dict.addWord('xxxxxxx', function(err, word){
+   console.log(err);
+   // if the method succeeded then
+   // the output will be: null, 'foo'
+});
+```
 
 Installation
 ------------
@@ -22,16 +40,16 @@ var nodehun = require('nodehun');
 var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
-dict.spellSuggest('color',function(a,b){
-	console.log(a,b);
+dict.spellSuggest('color',function(err, correct, suggestion){
+	console.log(err, correct, suggestion);
 	// because "color" is a defined word in the US English dictionary
-	// the output will be: true, null
+	// the output will be: null, true, null
 });
 
-dict.spellSuggest('calor',function(a,b){
-	console.log(a,b);
+dict.spellSuggest('calor',function(err, correct, suggestion){
+	console.log(err, correct, suggestion);
 	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: false, "carol"
+	// the output will be: null, false, "carol"
 });
 ```
 
@@ -45,16 +63,16 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggestions('color',function(a,b){
-	console.log(a,b);
+dict.spellSuggestions('color',function(err, correct, suggestions){
+	console.log(err, correct, suggestions);
 	// because "color" is a defined word in the US English dictionary
-	// the output will be: true, []
+	// the output will be: null, true, []
 });
 
 dict.spellSuggestions('calor',function(a,b){
-	console.log(a,b);
+	console.log(err, correct, suggestions);
 	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: false, [ 'carol','valor','color','cal or','cal-or','caloric','calorie']
+	// the output will be: null, false, [ 'carol','valor','color','cal or','cal-or','caloric','calorie']
 });
 ```
 
@@ -69,21 +87,19 @@ var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dictbuf2 = fs.readFileSync(somedirectory+'/en_CA.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('colour',function(a,b){
-	console.log(a,b);
+dict.spellSuggest('colour',function(err, correct, suggestion){
+	console.log(err, correct, suggestion);
 	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: false, "color"
+	// the output will be: null, false, "color"
 });
 
-dict.addDictionary(dictbuf2,function(added){
-	console.log(added);
-	// because the Canadian English dictionary exists,
-	// the output will be: true
-	USDictionary.spellSuggest('colour',function(a,b){
-		console.log(a,b);
-		// because "colour" is a defined word in the Canadian English dictionary
-		// the output will be: true, null
-	});
+dict.addDictionary(dictbuf2,function(err){
+	if(!err)
+		USDictionary.spellSuggest('colour',function(err, correct, suggestion){
+			console.log(err, correct, suggestion);
+			// because "colour" is a defined word in the Canadian English dictionary
+			// the output will be: null, true, null
+		});				
 });
 ```
 
@@ -91,27 +107,25 @@ Add Word
 --------
 Nodehun can also add a single word to a dictionary at runtime (this means it is not permanent) in order to have a custom runtime dictionary. If you know anything about Hunspell you can also add flags to the word.
 
-```
+```js
 var nodehun = require('nodehun');
 var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('colour',function(a,b){
-	console.log(a,b);
+dict.spellSuggest('colour',function(err, correct, suggestion){
+	console.log(err, correct, suggestions);
 	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: false, "color"
+	// the output will be: null, false, "color"
 });
 
-dict.addWord('colour',function(a,b){
-	console.log(a,b);
-	// if the method succeeded then
-	// the output will be: true, 'colour'
-	dict.spellSuggest('colour',function(a,b){
-		console.log(a,b);
-		// because "colour" has been added to the US dictionary object.
-		// the output will be: true, null
-	});
+dict.addWord('colour',function(err, word){
+	if(!err)
+		dict.spellSuggest('colour',function(a,b){
+			console.log(a,b);
+			// because "colour" has been added to the US dictionary object.
+			// the output will be: true, null
+		});
 
 });
 ```
@@ -126,22 +140,20 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('color',function(a,b){
-	console.log(a,b);
+dict.spellSuggest('color',function(err, correct, suggestion){
+	console.log(err, correct, suggestion);
 	// because "color" is a defined word in the US English dictionary
-	// the output will be: true, null
+	// the output will be: null, true, null
 });
 
-dict.removeWord('color',function(a,b){
-	console.log(a,b);
-	// if the method succeeded then
-	// the output will be: true, 'color'
-	dict.spellSuggest('color',function(a,b){
-		console.log(a,b);
-		// because "color" has been removed from the US dictionary object.
-		// the output will be: false, "colors"
-		// note that plurals are considered separte words.
-	});
+dict.removeWord('color',function(err, word){
+	if(!err)			
+		dict.spellSuggest('color',function(err, correct, suggestion){
+			console.log(err, correct, suggestion);
+			// because "color" has been removed from the US dictionary object.
+			// the output will be: null, false, "colors"
+			// note that plurals are considered separte words.
+		});
 
 });
 ```
@@ -156,9 +168,9 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.stem('telling',function(a){
-	console.log(a);
-	// the output will be: [telling, tell]
+dict.stem('telling',function(err, stems){
+	console.log(err, stems);
+	// the output will be: null, [telling, tell]
 });
 ```
 
@@ -171,12 +183,13 @@ var nodehun = require('nodehun');
 var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 
-nodehun.createNewNodehun(affbuf,dictbuf,function(dict){
-	dict.spellSuggest('color',function(a,b){
-		console.log(a,b);
-		// because "color" is a defined word in the US English dictionary
-		// the output will be: true, null
-	});
+nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
+	if(!err)
+		dict.spellSuggest('color',function(err, correct, suggestion){
+			console.log(err, correct, suggestion);
+			// because "color" is a defined word in the US English dictionary
+			// the output will be: null, true, null
+		});
 });
 ```
 

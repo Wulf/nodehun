@@ -1,9 +1,11 @@
 #include "license.nodehun"
 #include <uv.h>
 #include <string>
+#include <cstring>
 #include <hunspell.hxx>
 #include <node.h>
 #include <node_buffer.h>
+
 
 namespace Nodehun {
   //
@@ -129,6 +131,10 @@ protected:
   // Remove a word from a dictionary object at runtime (ephemerally).
   //
   static v8::Handle<v8::Value> removeWord(const v8::Arguments&);
+  //
+  // Does the bulk of the work for adding and removing a word
+  //
+  static v8::Handle<v8::Value> addRemoveWordInit(const v8::Arguments&, bool);
   //
   // new nodehun work
   //
