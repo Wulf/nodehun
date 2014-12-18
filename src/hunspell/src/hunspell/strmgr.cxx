@@ -35,7 +35,7 @@ char * StrMgr::getline() {
   int i = 0;
   for(; st[index] != '\n' && st[index] != EOF && st[index] != '\0' && i < BUFSIZE - 1; i++, index++)
     in[i] = st[index];
-  if(st[index] == EOF || st[index] == '\0' && i == 0){
+  if((st[index] == EOF) || ((st[index] == '\0') && (i == 0))) {
     done = true;
     return NULL;
   }

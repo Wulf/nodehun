@@ -1,10 +1,18 @@
 var nodehun = require('./../build/Release/nodehun');
 var fs = require('fs');
 
-
 var dict = new nodehun(fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.aff'),fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic'));
-for(var i = 0; i < 41; i++)
-    dict.spellSuggestions('calor',function(err,a,b,c){
-	if(!err)
-	    console.log(a,b,c);
-    }.bind(undefined,i));
+var words = ['original', 'roach', 'erasee', 'come', 'consol', 'argumnt', 'gage',
+              'libary', 'lisence', 'principal', 'realy', 'license', 'suprise', 'writting'];
+
+var handleMisspellings = function(err, correct, origWord, suggestions) {
+      if (err) throw err;
+      if (correct)
+        console.log(origWord + ' is spelled correctly!');
+      else
+        console.log(origWord + ' not recognized. Suggestions: ' + suggestions);
+}
+
+words.forEach(function(w) {
+  dict.spellSuggestions(w, handleMisspellings);
+});

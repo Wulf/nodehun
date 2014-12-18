@@ -40,16 +40,16 @@ var nodehun = require('nodehun');
 var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
-dict.spellSuggest('color',function(err, correct, suggestion){
-	console.log(err, correct, suggestion);
+dict.spellSuggest('color',function(err, correct, origWord, suggestion){
+	console.log(err, correct, origWord, suggestion);
 	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, null
+	// the output will be: null, true, "color", null
 });
 
-dict.spellSuggest('calor',function(err, correct, suggestion){
-	console.log(err, correct, suggestion);
+dict.spellSuggest('calor',function(err, correct, origWord, suggestion){
+	console.log(err, correct, origWord, suggestion);
 	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: null, false, "carol"
+	// the output will be: null, false, "calor", "carol"
 });
 ```
 
@@ -63,16 +63,16 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggestions('color',function(err, correct, suggestions){
-	console.log(err, correct, suggestions);
+dict.spellSuggestions('color',function(err, correct, origWord, suggestions){
+	console.log(err, correct, origWord, suggestions);
 	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, []
+	// the output will be: null, true, "color", []
 });
 
-dict.spellSuggestions('calor',function(a,b){
+dict.spellSuggestions('calor',function(err, correct, origWord, suggestions){
 	console.log(err, correct, suggestions);
 	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: null, false, [ 'carol','valor','color','cal or','cal-or','caloric','calorie']
+	// the output will be: null, false, "calor", [ 'carol','valor','color','cal or','cal-or','caloric','calorie']
 });
 ```
 
@@ -87,18 +87,18 @@ var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dictbuf2 = fs.readFileSync(somedirectory+'/en_CA.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('colour',function(err, correct, suggestion){
-	console.log(err, correct, suggestion);
+dict.spellSuggest('colour',function(err, correct, origWord, suggestion){
+	console.log(err, correct, origWord, suggestion);
 	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: null, false, "color"
+	// the output will be: null, false, "colour", "color"
 });
 
 dict.addDictionary(dictbuf2,function(err){
 	if(!err)
-		USDictionary.spellSuggest('colour',function(err, correct, suggestion){
-			console.log(err, correct, suggestion);
+		USDictionary.spellSuggest('colour',function(err, correct, origWord, suggestion){
+			console.log(err, correct, origWord, suggestion);
 			// because "colour" is a defined word in the Canadian English dictionary
-			// the output will be: null, true, null
+			// the output will be: null, true, "colour", null
 		});				
 });
 ```
@@ -113,10 +113,10 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('colour',function(err, correct, suggestion){
-	console.log(err, correct, suggestions);
+dict.spellSuggest('colour',function(err, correct, origWord, suggestion){
+	console.log(err, correct, origWord, suggestions);
 	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: null, false, "color"
+	// the output will be: null, false, "colour", "color"
 });
 
 dict.addWord('colour',function(err, word){
@@ -140,7 +140,7 @@ var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
 var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('color',function(err, correct, suggestion){
+dict.spellSuggest('color',function(err, correct, origWord, suggestion){
 	console.log(err, correct, suggestion);
 	// because "color" is a defined word in the US English dictionary
 	// the output will be: null, true, null
@@ -148,7 +148,7 @@ dict.spellSuggest('color',function(err, correct, suggestion){
 
 dict.removeWord('color',function(err, word){
 	if(!err)			
-		dict.spellSuggest('color',function(err, correct, suggestion){
+		dict.spellSuggest('color',function(err, correct, origWord, suggestion){
 			console.log(err, correct, suggestion);
 			// because "color" has been removed from the US dictionary object.
 			// the output will be: null, false, "colors"
@@ -185,7 +185,7 @@ var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 
 nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
 	if(!err)
-		dict.spellSuggest('color',function(err, correct, suggestion){
+		dict.spellSuggest('color',function(err, correct, origWord, suggestion){
 			console.log(err, correct, suggestion);
 			// because "color" is a defined word in the US English dictionary
 			// the output will be: null, true, null
