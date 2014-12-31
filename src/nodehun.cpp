@@ -1,4 +1,5 @@
 #include "nodehun.hpp"
+#include <iostream>
 
 using namespace v8;
 using node::Buffer;
@@ -55,9 +56,9 @@ Handle<Value> Nodehun::SpellDictionary::createNewNodehun(const v8::Arguments& ar
     else {
       Nodehun::NodehunData* nodeData = new Nodehun::NodehunData();
       nodeData->callback = callback;
-      nodeData->aff = new char[Buffer::Length(args[0]) + 1];
+      nodeData->aff = new char[Buffer::Length(args[0])];
       strcpy(nodeData->aff, Buffer::Data(args[0].As<Object>()));
-      nodeData->dict = new char[Buffer::Length(args[1]) + 1];
+      nodeData->dict = new char[Buffer::Length(args[1])];
       strcpy(nodeData->dict, Buffer::Data(args[1].As<Object>()));
       nodeData->request.data = nodeData;
       uv_queue_work(uv_default_loop(), &nodeData->request,
@@ -68,7 +69,7 @@ Handle<Value> Nodehun::SpellDictionary::createNewNodehun(const v8::Arguments& ar
 }
 
 void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
-{
+{  
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
   nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL, true);
   delete nodeData->aff;
@@ -113,6 +114,7 @@ Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args)
     Local<External> ext = Local<External>::Cast(args[0]);
     void *ptr = ext->Value();
     Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(static_cast<Hunspell*>(ptr));
+    uv_rwlock_init(&(obj->rwlock));
     obj->Wrap(args.This());
   }
   else {
@@ -124,6 +126,7 @@ Handle<Value> Nodehun::SpellDictionary::New(const Arguments& args)
       return ThrowException(Exception::TypeError(String::New("Second argument must be a buffer")));
 
     Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(Buffer::Data(args[0].As<Object>()), Buffer::Data(args[1].As<Object>()));
+    uv_rwlock_init(&(obj->rwlock));
     obj->Wrap(args.This());  
   }
   return args.This();
@@ -158,7 +161,7 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggest(const Arguments& args)
       spellData->obj = obj;
       spellData->multiple = false;
       uv_queue_work(uv_default_loop(), &spellData->request,
-		    Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
+      	    Nodehun::SpellDictionary::checkSuggestions, Nodehun::SpellDictionary::sendSuggestions);
     }
   }
   return Undefined();
@@ -190,6 +193,7 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args)
 
       spellData->callback = callback;
       spellData->request.data = spellData;
+      
       spellData->word.append(*arg0);
       spellData->obj = obj;
       spellData->multiple = true;
@@ -203,25 +207,19 @@ Handle<Value> Nodehun::SpellDictionary::spellSuggestions(const Arguments& args)
 void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) 
 {
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-  char** suggestions;
+  uv_rwlock_rdlock(&(spellData->obj->rwlock));
   spellData->wordCorrect = spellData->obj->spellClass->spell(spellData->word.c_str());
   if (!spellData->wordCorrect)
-    spellData->numSuggest = spellData->obj->spellClass->suggest(&suggestions, spellData->word.c_str());
+    spellData->numSuggest = spellData->obj->spellClass->suggest(&(spellData->suggestions), spellData->word.c_str());
   else
     spellData->numSuggest = 0;
-  spellData->suggestions = new char*[spellData->numSuggest];
-  for(int t = 0, l = spellData->numSuggest; t < l; t++) {
-    spellData->suggestions[t] = new char[strlen(suggestions[t]) + 1];
-    strcpy(spellData->suggestions[t],suggestions[t]);
-  }
-  spellData->obj->spellClass->free_list(&suggestions,spellData->numSuggest);
+  uv_rwlock_rdunlock(&(spellData->obj->rwlock));
 }
 
 void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i)
 {
   HandleScope scope;
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-  
   const unsigned argc = 3;
   Local<Value> argv[argc];
   argv[0] = Local<Value>::New(Null());
@@ -235,17 +233,15 @@ void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i)
   else if(spellData->numSuggest > 0) {
     if(spellData->multiple) {
       Local<Array> suglist = Array::New(spellData->numSuggest);
-      for(int t = 0; t < spellData->numSuggest; t++){
+      for(int t = 0; t < spellData->numSuggest; t++)
 	suglist->Set(t,String::New(spellData->suggestions[t]));
-	delete spellData->suggestions[t];
-      }
-      delete spellData->suggestions;
       argv[2] = suglist;
     }
     else {
       argv[2] = String::New(spellData->suggestions[0]);
     }
   }
+  spellData->obj->spellClass->free_list(&(spellData->suggestions), spellData->numSuggest);
   TryCatch try_catch;
   spellData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
   if (try_catch.HasCaught())
@@ -283,7 +279,7 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args)
       delete dictData;
       return ThrowException(Exception::TypeError(String::New("First argument must be a buffer")));
     }
-    dictData->dict = new char[Buffer::Length(args[0]) + 1];
+    dictData->dict = new char[Buffer::Length(args[0])];
     strcpy(dictData->dict, Buffer::Data(args[0].As<Object>()));
     dictData->obj = obj;
     dictData->request.data = dictData;
@@ -298,8 +294,10 @@ Handle<Value> Nodehun::SpellDictionary::addDictionary(const Arguments& args)
 void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request)
 {
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
-  int status = dictData->obj->spellClass->add_dic(dictData->dict, true);
+  uv_rwlock_wrlock(&(dictData->obj->rwlock));
+  int status = dictData->obj->spellClass->add_dic(dictData->dict);
   dictData->success = status == 0;
+  uv_rwlock_wrunlock(&(dictData->obj->rwlock));
 }
 
 void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i)
@@ -377,12 +375,14 @@ Handle<Value> Nodehun::SpellDictionary::addRemoveWordInit(const Arguments& args,
 void Nodehun::SpellDictionary::addRemoveWordWork(uv_work_t* request)
 {
   Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
+  uv_rwlock_wrlock(&(wordData->obj->rwlock));
   int status;
   if(wordData->removeWord)
     status = wordData->obj->spellClass->remove(wordData->word.c_str());
   else
     status = wordData->obj->spellClass->add(wordData->word.c_str());
   wordData->success = status == 0;
+  uv_rwlock_wrunlock(&(wordData->obj->rwlock));
 }
 
 void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i)
@@ -439,7 +439,9 @@ Handle<Value> Nodehun::SpellDictionary::stem(const Arguments& args)
 void Nodehun::SpellDictionary::stemWork(uv_work_t* request)
 {
   Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
+  uv_rwlock_rdlock(&(stemData->obj->rwlock));
   stemData->numResults = stemData->obj->spellClass->stem(&stemData->results, stemData->word.c_str());
+  uv_rwlock_rdunlock(&(stemData->obj->rwlock));
 }
 
 void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
@@ -465,7 +467,4 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
   delete stemData;
 }
 
-
 NODE_MODULE(nodehun, Nodehun::SpellDictionary::Init);
-
-

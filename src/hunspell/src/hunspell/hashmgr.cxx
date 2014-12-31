@@ -369,9 +369,9 @@ int HashMgr::load_tables(const char * tpath, const char * key,bool notpath)
   // open dictionary file
   IStrMgr * dict;
   if(notpath)
-    dict = new StrMgr(tpath,key);
+    dict = new StrMgr(tpath, key);
   else
-    dict = new FileMgr(tpath,key);
+    dict = new FileMgr(tpath, key);
   
   if (dict == NULL) return 1;
 

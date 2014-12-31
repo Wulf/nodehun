@@ -5,7 +5,7 @@
 #include <hunspell.hxx>
 #include <node.h>
 #include <node_buffer.h>
-
+#include <cassert>
 
 namespace Nodehun {
   //
@@ -97,9 +97,11 @@ public:
       delete spellClass;
       spellClass = NULL;
     }
+    uv_rwlock_destroy(&rwlock);
   };
   // The pointer to the Hunspell Object.
   Hunspell *spellClass;
+  uv_rwlock_t rwlock;
 protected:
   //
   // Creates a new nodehun, asynchronously
