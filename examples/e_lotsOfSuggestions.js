@@ -9,7 +9,7 @@ var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic');
 var dict = new nodehun(fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.aff'),fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic'));
 for(var i = 0; i < 50; i++)
     process.nextTick(function(i){
-	dict.spellSuggestions('calor',function(err, a, b){
-	    console.log(i, err, a, b);
+	dict.spellSuggestions('calor',function(err, a, b, c){
+	    console.log(i, err, a, b, c);
 	});
     }.bind(undefined, i));

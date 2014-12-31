@@ -8,8 +8,8 @@ var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic');
 nodehun.createNewNodehun(affbuf, dictbuf,function(err, dict){
 
     if(!err)
-	dict.spellSuggest('color', function(err, correct, suggestions){
+	dict.spellSuggest('color', function(err, correct, suggestions, origWord){
 	    if(!err)
-		console.log('correct "color"', correct, suggestions)
+		console.log('correct "color"', correct, suggestions, origWord)
 	});
 });

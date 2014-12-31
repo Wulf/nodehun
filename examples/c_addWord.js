@@ -11,19 +11,20 @@ var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic');
 var timeInit = time();
 var dict = new nodehun(affbuf,dictbuf);
 
-dict.spellSuggest('colour',function(err,a,b){
+dict.spellSuggest('colour',function(err,a,b,c){
     if(!err)
-	console.log('"colour" without addition',a,b)
-});
-var timeWord = time();
-dict.addWord('colour',function(err,a,b){
-    if(!err)
-	console.log(err);
-    console.log('time adding word:',time() - timeWord, unit);
-    console.log('added word:',a,b);
-    dict.spellSuggest('colour',function(err,a,b){
+	console.log('"colour" without addition',a,b,c)
+    var timeWord = time();
+    dict.addWord('colour',function(err,a,b){
 	if(!err)
-	    console.log('"colour" with addition',a,b)
+	    console.log(err);
+	console.log('time adding word:',time() - timeWord, unit);
+	console.log('added word:',a,b);
+	dict.spellSuggest('colour',function(err,a,b,c){
+	    if(!err)
+		console.log('"colour" with addition',a,b,c)
+	});
     });
-});
 
+
+});
