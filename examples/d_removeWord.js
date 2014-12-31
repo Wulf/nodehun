@@ -14,11 +14,12 @@ var dict = new nodehun(affbuf,dictbuf);
 dict.spellSuggest('color',function(err,a,b){
     if(!err)
 	console.log('"color" without removal',a,b)
-});
-var timeWord = time();
-dict.removeWord('color',function(err,a,b){
-    console.log(err);
-    console.log('time removing word:',time() - timeWord, unit);
-    console.log('removed word:',a,b);
-    dict.spellSuggest('color',function(a,b){console.log('"color" with removal',a,b)});
+    var timeWord = time();
+    dict.removeWord('color',function(err,a,b){
+	console.log(err);
+	console.log('time removing word:',time() - timeWord, unit);
+	console.log('removed word:',a,b);
+	dict.spellSuggest('color',function(err,a,b,c){console.log('"color" with removal',a,b,c);});
+    });
+
 });

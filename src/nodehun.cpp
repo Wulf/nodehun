@@ -220,10 +220,11 @@ void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i)
 {
   HandleScope scope;
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
-  const unsigned argc = 3;
+  const unsigned argc = 4;
   Local<Value> argv[argc];
   argv[0] = Local<Value>::New(Null());
   argv[1] = Local<Value>::New(Boolean::New(spellData->wordCorrect));
+  argv[3] = Local<Value>::New(String::New(spellData->word.c_str()));
   if(spellData->wordCorrect || spellData->numSuggest == 0) {
     if(spellData->multiple)
       argv[2] = Array::New(0);
