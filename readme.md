@@ -1,5 +1,9 @@
 Nodehun
 =======
+Introduction
+------------
+Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintain way, while also maintaining the performance characteristics expected of a responsible node module. 
+
 Warning on Versions
 -------------------
 The current versions of nodehun (1.XX.XX) supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Where possible the 0 and 1 version will have the same bug fixes. Here is an example of how they would differ:
@@ -26,10 +30,6 @@ code is on your system. Usually having node installed is enough, but there are w
 
 	npm install nodehun
 
-
-Introduction
-------------
-Yes there are already two nodejs spell checkers based of off hunspell, but one doesn't seem to even be supported anymore, and the other seems to only support simple spelling suggestions. Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintain way, while also offering additional functionality not even present in hunspell.
 
 Spell Suggest and Initialization
 --------------------------------
