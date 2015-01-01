@@ -39,15 +39,6 @@ char * StrMgr::getline() {
   if(index < size)
     linenum++;
   return strdup(in);
-    /*  for(i = 0; index < size && st[index] != '\n' && st[index] != EOF && st[index] != '\0' && i < BUFSIZE - 1; i++, index++)
-    in[i] = st[index];
-  if(index == size || st[index] == EOF || st[index] == '\0' && i == 0)
-    return NULL;
-  in[i] = st[index];
-  in[i + 1] = '\0';
-  linenum++;
-  index++;
-  return in;*/
 }
 
 int StrMgr::getlinenum() {
