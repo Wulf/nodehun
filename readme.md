@@ -2,7 +2,7 @@ Nodehun
 =======
 Introduction
 ------------
-Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintain way, while also maintaining the performance characteristics expected of a responsible node module. 
+Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module. 
 
 Warning on Versions
 -------------------
