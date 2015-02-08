@@ -192,6 +192,10 @@ nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
 });
 ```
 
+A Note About Open Office Dictionaries
+-------------------------------------
+All files must be UTF-8 to work! When you download [open office dictionaries](http://cgit.freedesktop.org/libreoffice/dictionaries/tree/) don't assume that the file is UTF-8 just because it is being served as a UTF-8 file. You may have to convert the file using the `iconv` unix utility (easy enough to do) to UTF-8 in order for the files to work.
+
 A Note About Creating Dictionaries
 ----------------------------------
 
