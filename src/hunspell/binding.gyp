@@ -78,20 +78,8 @@
 	'src/hunspell/strmgr.hxx',
         'src/hunspell/suggestmgr.cxx',
         'src/hunspell/suggestmgr.hxx',
-        'src/hunspell/w_char.hxx',
-      ],
-      'conditions': [
-        ['OS=="win"', {
-          'include_dirs': [ 'src/win_api' ],
-          'sources': [
-            'src/win_api/config.h',
-          ],
-        }, {
-          'sources': [
-            'src/hunspell/config.h',
-          ],
-        }],
-      ],
-    },
+        'src/hunspell/w_char.hxx'
+      ]
+    }
   ]
 }
