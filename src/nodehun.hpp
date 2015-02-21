@@ -5,7 +5,6 @@
 #include <hunspell.hxx>
 #include <node.h>
 #include <node_buffer.h>
-#include <cassert>
 
 namespace Nodehun {
   //
