@@ -5,7 +5,9 @@
 #include <hunspell.hxx>
 #include <node.h>
 #include <node_buffer.h>
+#include <node_object_wrap.h>
 
+using namespace v8;
 namespace Nodehun {
   //
   // This is the JS object that binds to hunspell:
@@ -105,37 +107,37 @@ protected:
   //
   // Creates a new nodehun, asynchronously
   //
-  static v8::Handle<v8::Value> createNewNodehun(const v8::Arguments&);
+  static void createNewNodehun(const FunctionCallbackInfo<Value>&);
   //
   // When a new JS object is created
   //
-  static v8::Handle<v8::Value> New(const v8::Arguments&);
-  static v8::Handle<v8::Value> New();
+  static void New(const FunctionCallbackInfo<Value>&);
+  static void New();
   //
   // Suggest a singularly correct spelling from a string.
   //
-  static v8::Handle<v8::Value> spellSuggest(const v8::Arguments&);
+  static void spellSuggest(const FunctionCallbackInfo<Value>&);
   //
   // Suggest a list of possible spellings from a string.
   // Ordered by correctness.
   //
-  static v8::Handle<v8::Value> spellSuggestions(const v8::Arguments&);
+  static void spellSuggestions(const FunctionCallbackInfo<Value>&);
   //
   // Add a new dictionary to an existing dictionary object at runtime (ephemerally).
   //
-  static v8::Handle<v8::Value> addDictionary(const v8::Arguments&);
+  static void addDictionary(const FunctionCallbackInfo<Value>&);
   //
   // Add a word to a dictionary object at runtime (ephemerally).
   //
-  static v8::Handle<v8::Value> addWord(const v8::Arguments&);
+  static void addWord(const FunctionCallbackInfo<Value>&);
   //
   // Remove a word from a dictionary object at runtime (ephemerally).
   //
-  static v8::Handle<v8::Value> removeWord(const v8::Arguments&);
+  static void removeWord(const FunctionCallbackInfo<Value>&);
   //
   // Does the bulk of the work for adding and removing a word
   //
-  static v8::Handle<v8::Value> addRemoveWordInit(const v8::Arguments&, bool);
+  static void addRemoveWordInit(const FunctionCallbackInfo<Value>&, bool);
   //
   // new nodehun work
   //
@@ -179,7 +181,7 @@ protected:
   //
   // node wrapped hunspell stem function
   //
-  static v8::Handle<v8::Value> stem(const v8::Arguments&);
+  static void stem(const FunctionCallbackInfo<Value>&);
   //
   // Threaded work on hunspell to get stem results from hunspell
   //
