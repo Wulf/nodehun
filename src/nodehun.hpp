@@ -22,6 +22,7 @@ namespace Nodehun {
   struct WordData {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
+    v8::Isolate* isolate;
     bool removeWord;
     bool callbackExists;
     bool success;
@@ -36,6 +37,7 @@ namespace Nodehun {
   struct DictData {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
+    v8::Isolate* isolate;
     bool callbackExists;
     char * dict;
     bool success;
@@ -49,6 +51,7 @@ namespace Nodehun {
   struct SpellData {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
+    v8::Isolate* isolate;
     std::string word;
     bool multiple;
     Nodehun::SpellDictionary* obj;
@@ -62,6 +65,7 @@ namespace Nodehun {
   struct StemData{
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
+    v8::Isolate *isolate;
     Nodehun::SpellDictionary *obj;
     std::string word;
     char** results;
@@ -74,6 +78,7 @@ namespace Nodehun {
   struct NodehunData {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
+    v8::Isolate *isolate;
     char * aff;
     char * dict;
     Hunspell *obj;
@@ -86,7 +91,7 @@ public:
   // The function that gets called by JavaScript
   // when a new object is being created.
   //
-  static v8::Persistent<v8::FunctionTemplate> constructor;
+  static v8::Persistent<v8::Function> constructor;
   static void Init(v8::Handle<v8::Object>, v8::Handle<v8::Object>);
   SpellDictionary(const char*, const char*);
   SpellDictionary(Hunspell*);
