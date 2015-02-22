@@ -6,7 +6,9 @@ Nodehun aims to expose as much of hunspell's functionality as possible in an eas
 
 Warning on Versions
 -------------------
-The current versions of nodehun (1.XX.XX) supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Where possible the 0 and 1 version will have the same bug fixes. Here is an example of how they would differ:
+tldr; NPM verssion 2.x.x and 1.x.x have the same method signature, but 2.x.x is for node v0.12.0 and greater. Version 0.x.x is a different set of method signatures, don't use it. Node 2.x.x and 1.x.x will be kept at parity for a while, but 0.x.x is now deprecated.
+
+The current version of nodehun, 2.x.x doesn't change any method signatures but will not work on any version of node prior to 0.12.0. Version 1.XX.XX has the same method signatures as 2.x.x, but works on node prior to 0.12.0, it also  supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Here is an example of how they would differ:
 
 ```js
 //0.XX.XX version:
