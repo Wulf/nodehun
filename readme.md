@@ -6,9 +6,7 @@ Nodehun aims to expose as much of hunspell's functionality as possible in an eas
 
 Warning on Versions
 -------------------
-tldr; NPM verssion 2.x.x and 1.x.x have the same method signature, but 2.x.x is for node v0.12.0 and greater. Version 0.x.x is a different set of method signatures, don't use it. Node 2.x.x and 1.x.x will be kept at parity for a while, but 0.x.x is now deprecated.
-
-The current version of nodehun, 2.x.x doesn't change any method signatures but will not work on any version of node prior to 0.12.0. Version 1.XX.XX has the same method signatures as 2.x.x, but works on node prior to 0.12.0, it also  supports some different method signature than the earlier versions (0.XX.XX). The method signatures differ when an earlier version passed the first argument as a success parameter of the method, when really an error should be null or passed if something went wrong. Here is an example of how they would differ:
+The method signatures of version 0.XX.XX differs from the current versions. The first argument in these versions was a success parameter, when really an error should be null or passed if something went wrong. Here is an example of how they would differ:
 
 ```js
 //0.XX.XX version:
@@ -17,7 +15,7 @@ dict.addWord('foo',function(success, word){
    // if the method succeeded then
    // the output will be : true, 'foo'
 n}); 
-//1.XX.XX version:
+//1.XX.XX/2.XX.XX version:
 dict.addWord('xxxxxxx', function(err, word){
    console.log(err);
    // if the method succeeded then
@@ -27,8 +25,6 @@ dict.addWord('xxxxxxx', function(err, word){
 
 Installation
 ------------
-Nodehun has no "node_module" dependencies (yet), so it can either be installed via npm or simply checked out of git. You'll need [node-gyp](https://github.com/TooTallNate/node-gyp) to build. Nodehun should work on Windows or Unix. You'll also need to make sure that libuv source
-code is on your system. Usually having node installed is enough, but there are weird cases.
 
 	npm install nodehun
 
