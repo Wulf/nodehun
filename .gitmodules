@@ -1,0 +1,3 @@
+[submodule "src/hunspell"]
+	path = src/hunspell
+	url = git@github.com:nathanjsweet/hunspell-distributed.git
