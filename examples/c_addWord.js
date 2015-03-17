@@ -5,8 +5,8 @@ var fs = require('fs');
 unit = typeof mctime !== "undefined" ? "μs":"ms",
 time = typeof mctime !== "undefined" ? mctime.now : Date.now;
 
-var affbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.aff');
-var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US/en_US.dic');
+var affbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.aff');
+var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.dic');
 
 var timeInit = time();
 var dict = new nodehun(affbuf,dictbuf);

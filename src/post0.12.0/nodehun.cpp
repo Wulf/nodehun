@@ -19,6 +19,8 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(tpl, "addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(tpl, "removeWord", removeWord);
   NODE_SET_PROTOTYPE_METHOD(tpl, "stem", stem);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "generate", generate);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "analyze", analyze);
   
   constructor.Reset(isolate, tpl->GetFunction());
   module->Set(String::NewFromUtf8(isolate, "exports"), tpl->GetFunction());
@@ -452,6 +454,133 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
   cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
   stemData->callback.Reset();
   delete stemData;
+}
+
+void Nodehun::SpellDictionary::generate(const FunctionCallbackInfo<Value>& args) 
+{
+  Isolate* isolate = args.GetIsolate();
+  HandleScope scope(isolate);  
+  int argl = args.Length();
+  if(argl > 2 && args[2]->IsFunction()) {
+    Local<Function> callback = Local<Function>::Cast(args[2]);
+    if (!args[0]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
+      argv[1] = Local<Value>::New(isolate, Null(isolate));
+      callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+    }
+    else if (!args[1]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a string"));
+      argv[1] = Local<Value>::New(isolate, Null(isolate));
+      callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+    }
+    else{
+      Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
+      Nodehun::GenerateData* generateData = new Nodehun::GenerateData();
+      v8::String::Utf8Value arg0(args[0]->ToString());
+      v8::String::Utf8Value arg1(args[1]->ToString());
+      generateData->isolate = isolate;
+      generateData->word.append(*arg0);
+      generateData->word2.append(*arg1);
+      generateData->callback.Reset(isolate, callback);
+      generateData->obj = obj;
+      generateData->request.data = generateData;
+      uv_queue_work(uv_default_loop(), &generateData->request,
+		    Nodehun::SpellDictionary::generateWork, Nodehun::SpellDictionary::generateFinish);
+    }
+  }
+  args.GetReturnValue().SetUndefined();
+}
+
+void Nodehun::SpellDictionary::generateWork(uv_work_t* request)
+{
+  Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
+  uv_rwlock_rdlock(&(generateData->obj->rwlock));
+  generateData->numResults = generateData->obj->spellClass->generate(&generateData->results, generateData->word.c_str(), generateData->word2.c_str());
+  uv_rwlock_rdunlock(&(generateData->obj->rwlock));
+}
+
+void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i)
+{
+  Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
+  Isolate* isolate = generateData->isolate;
+  HandleScope scope(isolate);
+  
+  const unsigned int argc = 2;
+  Local<Value> argv[argc];
+  Local<Array> suglist = Array::New(isolate, generateData->numResults);
+
+  for(int t = 0; t < generateData->numResults; t++)
+    suglist->Set(t,String::NewFromUtf8(isolate, generateData->results[t]));
+  generateData->obj->spellClass->free_list(&generateData->results,generateData->numResults);
+  argv[0] = Local<Value>::New(isolate, Null(isolate));
+  argv[1] = suglist;
+  Local<Function> cb = Local<Function>::New(isolate, generateData->callback);
+  cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+  generateData->callback.Reset();
+  delete generateData;
+}
+
+void Nodehun::SpellDictionary::analyze(const FunctionCallbackInfo<Value>& args) 
+{
+  Isolate* isolate = args.GetIsolate();
+  HandleScope scope(isolate);  
+  int argl = args.Length();
+  if(argl > 1 && args[1]->IsFunction()) {
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+    if (!args[0]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
+      argv[1] = Local<Value>::New(isolate, Null(isolate));
+      callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+    }
+    else{
+      Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
+      Nodehun::AnalyzeData* analyzeData = new Nodehun::AnalyzeData();
+      v8::String::Utf8Value arg0(args[0]->ToString());
+      analyzeData->isolate = isolate;
+      analyzeData->word.append(*arg0);
+      analyzeData->callback.Reset(isolate, callback);
+      analyzeData->obj = obj;
+      analyzeData->request.data = analyzeData;
+      uv_queue_work(uv_default_loop(), &analyzeData->request,
+		    Nodehun::SpellDictionary::analyzeWork, Nodehun::SpellDictionary::analyzeFinish);
+    }
+  }
+  args.GetReturnValue().SetUndefined();
+}
+
+void Nodehun::SpellDictionary::analyzeWork(uv_work_t* request)
+{
+  Nodehun::AnalyzeData* analyzeData = static_cast<Nodehun::AnalyzeData*>(request->data);
+  uv_rwlock_rdlock(&(analyzeData->obj->rwlock));
+  analyzeData->numResults = analyzeData->obj->spellClass->analyze(&analyzeData->results, analyzeData->word.c_str());
+  uv_rwlock_rdunlock(&(analyzeData->obj->rwlock));
+}
+
+void Nodehun::SpellDictionary::analyzeFinish(uv_work_t* request, int i)
+{
+  Nodehun::AnalyzeData* analyzeData = static_cast<Nodehun::AnalyzeData*>(request->data);
+  Isolate* isolate = analyzeData->isolate;
+  HandleScope scope(isolate);
+  
+  const unsigned int argc = 2;
+  Local<Value> argv[argc];
+  Local<Array> suglist = Array::New(isolate, analyzeData->numResults);
+
+  for(int t = 0; t < analyzeData->numResults; t++)
+    suglist->Set(t,String::NewFromUtf8(isolate, analyzeData->results[t]));
+  analyzeData->obj->spellClass->free_list(&analyzeData->results,analyzeData->numResults);
+  argv[0] = Local<Value>::New(isolate, Null(isolate));
+  argv[1] = suglist;
+  Local<Function> cb = Local<Function>::New(isolate, analyzeData->callback);
+  cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+  analyzeData->callback.Reset();
+  delete analyzeData;
 }
 
 NODE_MODULE(nodehun, Nodehun::SpellDictionary::Init);

@@ -23,6 +23,8 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(constructor, "addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(constructor, "removeWord", removeWord);
   NODE_SET_PROTOTYPE_METHOD(constructor, "stem", stem);
+  NODE_SET_PROTOTYPE_METHOD(constructor, "generate", generate);
+  NODE_SET_PROTOTYPE_METHOD(constructor, "analyze", analyze);
   
   module->Set(String::NewSymbol("exports"), constructor->GetFunction());
 }
@@ -465,6 +467,149 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
     node::FatalException(try_catch);
   stemData->callback.Dispose();
   delete stemData;
+}
+
+
+Handle<Value> Nodehun::SpellDictionary::generate(const Arguments& args) 
+{
+  HandleScope scope;  
+  int argl = args.Length();
+  if(argl > 2 && args[2]->IsFunction()) {
+    Persistent<Function> callback = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+    if (!args[0]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      TryCatch try_catch;
+      argv[0] = Exception::TypeError(String::New("First argument must be a string"));
+      argv[1] = Local<Value>::New(Null());
+      callback->Call(Context::GetCurrent()->Global(), argc, argv);
+      if (try_catch.HasCaught())
+	node::FatalException(try_catch);
+      callback.Dispose();
+      return scope.Close(Undefined());
+    }
+	
+    if (!args[1]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      TryCatch try_catch;
+      argv[0] = Exception::TypeError(String::New("Second argument must be a string"));
+      argv[1] = Local<Value>::New(Null());
+      callback->Call(Context::GetCurrent()->Global(), argc, argv);
+      if (try_catch.HasCaught())
+	node::FatalException(try_catch);
+      callback.Dispose();
+      return scope.Close(Undefined());
+    }
+
+    Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+    Nodehun::GenerateData* generateData = new Nodehun::GenerateData();
+    v8::String::Utf8Value arg0(args[0]->ToString());
+    v8::String::Utf8Value arg1(args[1]->ToString());
+    generateData->word.append(*arg0);
+    generateData->word2.append(*arg1);
+    generateData->callback = callback;
+    generateData->obj = obj;
+    generateData->request.data = generateData;
+    uv_queue_work(uv_default_loop(), &generateData->request,
+		  Nodehun::SpellDictionary::generateWork, Nodehun::SpellDictionary::generateFinish);
+  }
+  return scope.Close(Undefined());
+}
+
+void Nodehun::SpellDictionary::generateWork(uv_work_t* request)
+{
+  Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
+  uv_rwlock_rdlock(&(generateData->obj->rwlock));
+  generateData->numResults = generateData->obj->spellClass->generate(&generateData->results, generateData->word.c_str(), generateData->word2.c_str());
+  uv_rwlock_rdunlock(&(generateData->obj->rwlock));
+}
+
+void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i)
+{
+  HandleScope scope;
+  Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
+  
+  const unsigned int argc = 2;
+  Local<Value> argv[argc];
+  Local<Array> suglist = Array::New(generateData->numResults);
+
+  for(int t = 0; t < generateData->numResults; t++)
+    suglist->Set(t,String::New(generateData->results[t]));
+  generateData->obj->spellClass->free_list(&generateData->results,generateData->numResults);
+  argv[0] = Local<Value>::New(Null());
+  argv[1] = suglist;
+  TryCatch try_catch;
+  generateData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  
+  if(try_catch.HasCaught())
+    node::FatalException(try_catch);
+  generateData->callback.Dispose();
+  delete generateData;
+}
+
+
+Handle<Value> Nodehun::SpellDictionary::analyze(const Arguments& args) 
+{
+  HandleScope scope;  
+  int argl = args.Length();
+  if(argl > 1 && args[1]->IsFunction()) {
+    Persistent<Function> callback = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+    if (!args[0]->IsString()) {
+      const unsigned argc = 2;
+      Local<Value> argv[argc];
+      TryCatch try_catch;
+      argv[0] = Exception::TypeError(String::New("First argument must be a string"));
+      argv[1] = Local<Value>::New(Null());
+      callback->Call(Context::GetCurrent()->Global(), argc, argv);
+      if (try_catch.HasCaught())
+	node::FatalException(try_catch);
+      callback.Dispose();
+      return scope.Close(Undefined());
+    }
+
+    Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+    Nodehun::AnalyzeData* analyzeData = new Nodehun::AnalyzeData();
+    v8::String::Utf8Value arg0(args[0]->ToString());
+    analyzeData->word.append(*arg0);
+    analyzeData->callback = callback;
+    analyzeData->obj = obj;
+    analyzeData->request.data = analyzeData;
+    uv_queue_work(uv_default_loop(), &analyzeData->request,
+		  Nodehun::SpellDictionary::analyzeWork, Nodehun::SpellDictionary::analyzeFinish);
+  }
+  return scope.Close(Undefined());
+}
+
+void Nodehun::SpellDictionary::analyzeWork(uv_work_t* request)
+{
+  Nodehun::AnalyzeData* analyzeData = static_cast<Nodehun::AnalyzeData*>(request->data);
+  uv_rwlock_rdlock(&(analyzeData->obj->rwlock));
+  analyzeData->numResults = analyzeData->obj->spellClass->analyze(&analyzeData->results, analyzeData->word.c_str());
+  uv_rwlock_rdunlock(&(analyzeData->obj->rwlock));
+}
+
+void Nodehun::SpellDictionary::analyzeFinish(uv_work_t* request, int i)
+{
+  HandleScope scope;
+  Nodehun::AnalyzeData* analyzeData = static_cast<Nodehun::AnalyzeData*>(request->data);
+  
+  const unsigned int argc = 2;
+  Local<Value> argv[argc];
+  Local<Array> suglist = Array::New(analyzeData->numResults);
+
+  for(int t = 0; t < analyzeData->numResults; t++)
+    suglist->Set(t,String::New(analyzeData->results[t]));
+  analyzeData->obj->spellClass->free_list(&analyzeData->results,analyzeData->numResults);
+  argv[0] = Local<Value>::New(Null());
+  argv[1] = suglist;
+  TryCatch try_catch;
+  analyzeData->callback->Call(Context::GetCurrent()->Global(), argc, argv);
+  
+  if(try_catch.HasCaught())
+    node::FatalException(try_catch);
+  analyzeData->callback.Dispose();
+  delete analyzeData;
 }
 
 NODE_MODULE(nodehun, Nodehun::SpellDictionary::Init);

@@ -1,3 +1,8 @@
 Dictionaries
 ------------
-Free dictionaries are available at [http://extensions.services.openoffice.org/dictionary](http://extensions.services.openoffice.org/dictionary). They simply need to be dropped into this folder. The folder name MUST be the exact same as the dictionary and affix files (minus the extensions ".dic" and ".aff", of course).
+The included dictionaries where extracted from Libre Office. Yhe Libre Office versions have a modified aff file that makes generate() and analyze() much more useful. However, any MySpell style dictionary will work. Here are a few sources:
+
+* [Libre Office dictionaries](http://cgit.freedesktop.org/libreoffice/dictionaries/tree/)
+* [Official Aspell dictionaries](http://wordlist.aspell.net/dicts/)
+* [Open Office extensions](http://extensions.services.openoffice.org/dictionary)
+* [Mozilla Extensions](https://addons.mozilla.org/en-us/firefox/language-tools/)
