@@ -171,6 +171,43 @@ dict.stem('telling',function(err, stems){
 });
 ```
 
+Analyze
+----
+Nodehun exposes the Hunspell `analyze` function which analyzes a word and return a morphological analysis. Consult the Hunspell documentation for further understanding.
+
+```js
+var nodehun = require('nodehun');
+var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
+var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
+var dict = new nodehun(affbuf,dictbuf);
+
+dict.analyze('telling',function(err, fields){
+	console.log(err, fields);
+	// with the provided dictionaries, the output will be: null [ ' st:telling ts:0', ' st:tell ts:0 al:told is:Vg' ]
+});
+```
+
+Generate
+----
+Nodehun exposes the Hunspell `generate` function which generates a varition of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
+
+```js
+var nodehun = require('nodehun');
+var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
+var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
+var dict = new nodehun(affbuf,dictbuf);
+
+dict.generate('telling', 'ran', function(err,res){
+    console.log(err, res);
+	// the output will be: null [ 'told' ]
+
+	dict.generate('told', 'run', function(err,res){
+		console.log(err, res);
+	// the output will be: null [ 'tell' ]
+	});
+});
+```
+
 Asynchronous Invocation
 -----------------------
 Initializing the nodehun object can be bumpy if you're doing it a lot. A large dictionary can take up to 100ms to initialize. This is obviously unacceptable in applications that need on-the-fly dictionary creation. Therefore there is a static method on the nodehun object that allows you to initialize the dictionary object asynchronously, like so:

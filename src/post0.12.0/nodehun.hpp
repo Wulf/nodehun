@@ -71,6 +71,31 @@ namespace Nodehun {
     int numResults;
   };
   //
+  // This is a baton for obtaining generate data.
+  //
+  struct GenerateData{
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    v8::Isolate *isolate;
+    Nodehun::SpellDictionary *obj;
+    std::string word;
+    std::string word2;
+    char** results;
+    int numResults;
+  };
+  //
+  // This is a baton for obtaining analyze data.
+  //
+  struct AnalyzeData{
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    v8::Isolate *isolate;
+    Nodehun::SpellDictionary *obj;
+    std::string word;
+    char** results;
+    int numResults;
+  };
+  //
   // represents a work baton to asynchronously create a new
   // nodehun instance. 
   //
@@ -194,5 +219,29 @@ protected:
   // Join thread and return stemming results
   //
   static void stemFinish(uv_work_t*, int i = -1);
+  //
+  // node wrapped hunspell generate function
+  //
+  static void generate(const FunctionCallbackInfo<Value>&);
+  //
+  // Threaded work on hunspell to get generate results from hunspell
+  //
+  static void generateWork(uv_work_t*);
+  //
+  // Join thread and return generateming results
+  //
+  static void generateFinish(uv_work_t*, int i = -1);
+  //
+  // node wrapped hunspell analyze function
+  //
+  static void analyze(const FunctionCallbackInfo<Value>&);
+  //
+  // Threaded work on hunspell to get analyze results from hunspell
+  //
+  static void analyzeWork(uv_work_t*);
+  //
+  // Join thread and return analyzeming results
+  //
+  static void analyzeFinish(uv_work_t*, int i = -1);
 
 };
