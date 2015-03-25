@@ -10,5 +10,5 @@
         'src/hunspell/binding.gyp:hunspell'
       ],
     },
-  ],
+  ]
 }
