@@ -210,7 +210,7 @@ void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request)
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
   uv_rwlock_rdlock(&(spellData->obj->rwlock));
   spellData->wordCorrect = spellData->obj->spellClass->spell(spellData->word.c_str());
-  if (!spellData->wordCorrect)
+  if (!spellData->wordCorrect && spellData->multiple)
     spellData->numSuggest = spellData->obj->spellClass->suggest(&(spellData->suggestions), spellData->word.c_str());
   else
     spellData->numSuggest = 0;
