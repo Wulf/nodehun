@@ -13,6 +13,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   //static
   NODE_SET_METHOD(tpl, "createNewNodehun" , createNewNodehun);    
   //prototype
+  NODE_SET_PROTOTYPE_METHOD(tpl, "isCorrect", isCorrect);
   NODE_SET_PROTOTYPE_METHOD(tpl, "spellSuggest", spellSuggest);
   NODE_SET_PROTOTYPE_METHOD(tpl, "spellSuggestions", spellSuggestions);
   NODE_SET_PROTOTYPE_METHOD(tpl, "addDictionary", addDictionary);
@@ -133,6 +134,66 @@ void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args)
   }
   args.GetReturnValue().Set(args.This());
 }
+
+void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args) 
+{
+  Isolate* isolate = args.GetIsolate();
+  HandleScope scope(isolate);
+  int argl = args.Length();
+  if(argl > 1 && args[1]->IsFunction()) {
+    Local<Function> callback = Local<Function>::Cast(args[1]);
+    const unsigned argc = 3;
+    Local<Value> argv[argc];
+    argv[1] = Local<Value>::New(isolate, Null(isolate));
+    argv[2] = Local<Value>::New(isolate, Null(isolate));
+    if(argl < 1 || !args[0]->IsString()) {
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
+      callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+    }
+    else {
+      Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.This());
+      Nodehun::CorrectData* corrData = new Nodehun::CorrectData();  
+      String::Utf8Value arg0(args[0]->ToString());
+
+      corrData->isolate = isolate;
+      corrData->callback.Reset(isolate, callback);
+      corrData->request.data = corrData;
+      corrData->word.append(*arg0);
+      corrData->obj = obj;
+      corrData->isCorrect = false;
+      uv_queue_work(uv_default_loop(), &corrData->request,
+      	    Nodehun::SpellDictionary::checkCorrect, Nodehun::SpellDictionary::sendCorrect);
+    }
+  }
+  args.GetReturnValue().SetUndefined();
+}
+
+
+void Nodehun::SpellDictionary::checkCorrect(uv_work_t* request) 
+{
+  Nodehun::CorrectData* corrData = static_cast<Nodehun::CorrectData*>(request->data);
+  uv_rwlock_rdlock(&(corrData->obj->rwlock));
+  corrData->isCorrect = corrData->obj->spellClass->spell(corrData->word.c_str());
+  uv_rwlock_rdunlock(&(corrData->obj->rwlock));
+}
+
+void Nodehun::SpellDictionary::sendCorrect(uv_work_t* request, int i)
+{
+  Nodehun::CorrectData* corrData = static_cast<Nodehun::CorrectData*>(request->data);
+  Isolate* isolate = corrData->isolate;
+  HandleScope scope(isolate);
+
+  const unsigned argc = 3;
+  Local<Value> argv[argc];
+  argv[0] = Local<Value>::New(isolate, Null(isolate));
+  argv[1] = Local<Value>::New(isolate, Boolean::New(isolate, corrData->isCorrect));
+  argv[2] = Local<Value>::New(isolate, String::NewFromUtf8(isolate, corrData->word.c_str()));
+  Local<Function> cb = Local<Function>::New(isolate, corrData->callback);
+  cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+  corrData->callback.Reset();
+  delete corrData;
+}
+
 
 void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& args) 
 {

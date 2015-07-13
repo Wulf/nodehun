@@ -15,6 +15,18 @@ namespace Nodehun {
   //
   class SpellDictionary;
   //
+  // This is a baton for the asynchronous work of checking
+  // whether a word is spelled correctly or not.
+  //
+  struct CorrectData {
+    uv_work_t request;
+    v8::Persistent<v8::Function> callback;
+    v8::Isolate* isolate;
+    bool isCorrect;
+    std::string word;
+    Nodehun::SpellDictionary* obj;
+  };
+  //
   // This is a baton for the asynchronous work of adding
   // or removing a word from the dictionary object at runtime.
   //
@@ -143,6 +155,11 @@ protected:
   static void New(const FunctionCallbackInfo<Value>&);
   static void New();
   //
+  // Returns a boolean value as to whether a word is spelled correctly
+  // or not (i.e. whether it exists in the dictionary or not).
+  //
+  static void isCorrect(const FunctionCallbackInfo<Value>&);
+  //
   // Suggest a singularly correct spelling from a string.
   //
   static void spellSuggest(const FunctionCallbackInfo<Value>&);
@@ -196,6 +213,16 @@ protected:
   // a word from the dictionary object.
   //
   static void addRemoveWordFinish(uv_work_t*, int i = -1);
+  //
+  // The work (threaded) to check to see if a given
+  // word is spelled correctly.
+  //
+  static void checkCorrect(uv_work_t*);
+  //
+  // The call back to merge the thread that checked for whether
+  // a word was spelled correctly.
+  //
+  static void sendCorrect(uv_work_t*, int i = -1);
   //
   // The work (threaded) to check to see if a given
   // string and if not what any possible suggestions might be.
