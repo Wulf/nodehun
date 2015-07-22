@@ -9,8 +9,15 @@ var affbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.aff');
 var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.dic');
 var dictbuf2 = fs.readFileSync(__dirname+'/dictionaries/en_CA.dic');
 
+var dict = new nodehun(affbuf, dictbuf);
+console.log('"colour" without en_CA sync', dict.spellSuggestSync('colour'));
+
+dict.addDictionarySync(dictbuf2)
+
+console.log('"colour" with en_CA sync', dict.spellSuggestSync('colour'));
+
 var timeInit = time();
-var dict = new nodehun(affbuf,dictbuf);
+dict = new nodehun(affbuf,dictbuf);
 console.log('time to initialize dictionary class:',time() - timeInit,unit);
 
 
@@ -24,3 +31,5 @@ dict.addDictionary(dictbuf2,function(err){
     console.log('time to add dictionary:',time() - timeAdd, unit);
     dict.spellSuggest('colour',function(err,a,b,c){if(!err)console.log('"colour" with en_CA',a,b,c)});
 });
+
+

@@ -8,8 +8,13 @@ time = typeof mctime !== "undefined" ? mctime.now : Date.now;
 var affbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.aff');
 var dictbuf = fs.readFileSync(__dirname+'/dictionaries/en_US.dic');
 
-var timeInit = time();
 var dict = new nodehun(affbuf,dictbuf);
+console.log('"color" before removal sync:', dict.spellSuggestSync('color'));
+dict.removeWordSync('color');
+console.log('"color" after removal sync:', dict.spellSuggestSync('color'));
+
+var timeInit = time();
+dict = new nodehun(affbuf,dictbuf);
 
 dict.spellSuggest('color',function(err,a,b){
     if(!err)

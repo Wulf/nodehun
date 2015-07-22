@@ -149,6 +149,8 @@ protected:
   // Creates a new nodehun, asynchronously
   //
   static void createNewNodehun(const FunctionCallbackInfo<Value>&);
+  static void createNewNodehunWork(uv_work_t*);  
+  static void createNewNodehunFinish(uv_work_t*, int i = -1);
   //
   // When a new JS object is created
   //
@@ -156,20 +158,16 @@ protected:
   static void New();
   //
   // Returns a boolean value as to whether a word is spelled correctly
-  // or not (i.e. whether it exists in the dictionary or not). `checkCorrect`
-  // is the threaded work and sendCorrect receives the join. `spell` is 
-  // the member call with locking.
+  // or not (i.e. whether it exists in the dictionary or not).
   //
   static void isCorrect(const FunctionCallbackInfo<Value>&);
   static void isCorrectSync(const FunctionCallbackInfo<Value>&);
   static void checkCorrect(uv_work_t*);
   static void sendCorrect(uv_work_t*, int i = -1);
-  bool spell(char*)
+  bool spell(const char*);
   //
   // Suggest a singularly correct spelling from a string. `spellSuggestions`
-  // sends multiple suggestions. `checkSuggestions` is the threaded worker,
-  // `sendSuggestions` receives the join. `spellCheck` is the member method
-  // with locking.
+  // sends multiple suggestions.
   //
   static void spellSuggest(const FunctionCallbackInfo<Value>&);
   static void spellSuggestSync(const FunctionCallbackInfo<Value>&);
@@ -177,87 +175,49 @@ protected:
   static void spellSuggestionsSync(const FunctionCallbackInfo<Value>&);
   static void checkSuggestions(uv_work_t*);
   static void sendSuggestions(uv_work_t*, int i = -1);
-  int spellCheck(bool*, char***, char*);
+  int spellCheck(bool*, char***, const char*);
   //
   // Add a new dictionary to an existing dictionary object at runtime (ephemerally).
   //
   static void addDictionary(const FunctionCallbackInfo<Value>&);
+  static void addDictionarySync(const FunctionCallbackInfo<Value>&);
+  static void addDictionaryWork(uv_work_t*);
+  static void addDictionaryFinish(uv_work_t*, int i = -1);
+  bool addDict(const char*);
   //
-  // Add a word to a dictionary object at runtime (ephemerally).
+  // Add or remove a word to a dictionary object at runtime (ephemerally).
   //
   static void addWord(const FunctionCallbackInfo<Value>&);
-  //
-  // Remove a word from a dictionary object at runtime (ephemerally).
-  //
+  static void addWordSync(const FunctionCallbackInfo<Value>&);
   static void removeWord(const FunctionCallbackInfo<Value>&);
-  //
-  // Does the bulk of the work for adding and removing a word
-  //
+  static void removeWordSync(const FunctionCallbackInfo<Value>&);
   static void addRemoveWordInit(const FunctionCallbackInfo<Value>&, bool);
-  //
-  // new nodehun work
-  //
-  static void createNewNodehunWork(uv_work_t*);  
-  //
-  // new nodehun finish
-  //
-  static void createNewNodehunFinish(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) functionality to add a new dictionary
-  // to the current dictionary object.
-  //
-  static void addDictionaryWork(uv_work_t*);
-  //
-  // The call back to merge the thread back and return the result
-  // of a successful addition of a dictionary to the dictionary
-  // at runtime.
-  //
-  static void addDictionaryFinish(uv_work_t*, int i = -1);
-  //
-  // add/remove a word work (threaded) to the dictionary
-  // object at runtime.
-  //
+  static void addRemoveWordInitSync(const FunctionCallbackInfo<Value>&, bool);
   static void addRemoveWordWork(uv_work_t*);  
-  //
-  // the call back to merge the thread that added/removed
-  // a word from the dictionary object.
-  //
   static void addRemoveWordFinish(uv_work_t*, int i = -1);
+  bool addRemoveWord(const char*, bool);
   //
   // node wrapped hunspell stem function
   //
   static void stem(const FunctionCallbackInfo<Value>&);
-  //
-  // Threaded work on hunspell to get stem results from hunspell
-  //
+  static void stemSync(const FunctionCallbackInfo<Value>&);
   static void stemWork(uv_work_t*);
-  //
-  // Join thread and return stemming results
-  //
   static void stemFinish(uv_work_t*, int i = -1);
+  int stemWord(char***, const char*);
   //
   // node wrapped hunspell generate function
   //
   static void generate(const FunctionCallbackInfo<Value>&);
-  //
-  // Threaded work on hunspell to get generate results from hunspell
-  //
+  static void generateSync(const FunctionCallbackInfo<Value>&);
   static void generateWork(uv_work_t*);
-  //
-  // Join thread and return generateming results
-  //
   static void generateFinish(uv_work_t*, int i = -1);
+  int generateWord(char***, const char*, const char*);
   //
   // node wrapped hunspell analyze function
   //
   static void analyze(const FunctionCallbackInfo<Value>&);
-  //
-  // Threaded work on hunspell to get analyze results from hunspell
-  //
+  static void analyzeSync(const FunctionCallbackInfo<Value>&);
   static void analyzeWork(uv_work_t*);
-  //
-  // Join thread and return analyzeming results
-  //
   static void analyzeFinish(uv_work_t*, int i = -1);
-
+  int analyzeWord(char***, const char*);
 };

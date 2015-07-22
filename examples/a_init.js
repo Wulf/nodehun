@@ -15,10 +15,23 @@ dict.spellSuggest('Tacoma',function(err,a,b,c){
     if(!err)
 	console.log('misspelling "Tacoma"',a,b,c,'time to receive result:',time() - timeInit,unit)
 });
+
+try{
+    console.log('sync Tacoma:',dict.spellSuggestSync('Tacoma'));
+}catch(e){
+    console.log(e);
+}
+
 dict.spellSuggestions('calor',function(err,a,b,c){
     if(!err)
 	console.log('misspelling "calor"',a,b,c)
 });
+
+try{
+    console.log('sync calor:', dict.spellSuggestionsSync('calor'));
+}catch(e){
+    console.log(e);
+}
 
 dict.spellSuggest('color',function(err,a,b,c){
     if(!err)
