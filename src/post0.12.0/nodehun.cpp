@@ -562,6 +562,7 @@ bool Nodehun::SpellDictionary::addRemoveWord(const char* word, bool remove)
   uv_rwlock_wrunlock(&(this->rwlock));
   return status == 0;
 }
+
 void Nodehun::SpellDictionary::addRemoveWordWork(uv_work_t* request)
 {
   Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
@@ -730,7 +731,7 @@ void Nodehun::SpellDictionary::generateSync(const FunctionCallbackInfo<Value>& a
   }
   else {
     args.GetReturnValue().SetUndefined();
-    isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First and second argument must be a string.")));
+    isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First and second arguments must be a string.")));
   }
 }
 
@@ -745,9 +746,7 @@ int Nodehun::SpellDictionary::generateWord(char*** arr, const char* word, const 
 void Nodehun::SpellDictionary::generateWork(uv_work_t* request)
 {
   Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
-  uv_rwlock_rdlock(&(generateData->obj->rwlock));
-  generateData->numResults = generateData->obj->spellClass->generate(&generateData->results, generateData->word.c_str(), generateData->word2.c_str());
-  uv_rwlock_rdunlock(&(generateData->obj->rwlock));
+  generateData->numResults = generateData->obj->generateWord(&generateData->results, generateData->word.c_str(), generateData->word2.c_str());
 }
 
 void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i)

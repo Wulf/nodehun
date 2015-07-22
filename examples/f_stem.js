@@ -7,6 +7,6 @@ var dict = new nodehun(fs.readFileSync(__dirname+'/dictionaries/en_US.aff'),fs.r
 
 console.log('stemSync:telling', dict.stemSync('telling'));
 
-dict.stem('stem:telling',function(err,res){
+dict.stem('telling',function(err,res){
     console.log(err, res);
 });

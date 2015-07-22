@@ -139,6 +139,8 @@ protected:
   // Creates a new nodehun, asynchronously
   //
   static v8::Handle<v8::Value> createNewNodehun(const v8::Arguments&);
+  static void createNewNodehunWork(uv_work_t*);  
+  static void createNewNodehunFinish(uv_work_t*, int i = -1);
   //
   // When a new JS object is created
   //
@@ -149,115 +151,63 @@ protected:
   // or not (i.e. whether it exists in the dictionary or not).
   //
   static v8::Handle<v8::Value> isCorrect(const v8::Arguments&);
+  static v8::Handle<v8::Value> isCorrectSync(const v8::Arguments&);
+  static void checkCorrect(uv_work_t*);
+  static void sendCorrect(uv_work_t*, int i = -1);
+  bool spell(const char*);
   //
-  // Suggest a singularly correct spelling from a string.
+  // Suggest a singularly correct spelling from a string. `spellSuggestions`
+  // sends multiple suggestions.
   //
   static v8::Handle<v8::Value> spellSuggest(const v8::Arguments&);
-  //
-  // Suggest a list of possible spellings from a string.
-  // Ordered by correctness.
-  //
+  static v8::Handle<v8::Value> spellSuggestSync(const v8::Arguments&);
   static v8::Handle<v8::Value> spellSuggestions(const v8::Arguments&);
+  static v8::Handle<v8::Value> spellSuggestionsSync(const v8::Arguments&);
+  static void checkSuggestions(uv_work_t*);
+  static void sendSuggestions(uv_work_t*, int i = -1);
+  int spellCheck(bool*, char***, const char*);
   //
   // Add a new dictionary to an existing dictionary object at runtime (ephemerally).
   //
   static v8::Handle<v8::Value> addDictionary(const v8::Arguments&);
+  static v8::Handle<v8::Value> addDictionarySync(const v8::Arguments&);
+  static void addDictionaryWork(uv_work_t*);
+  static void addDictionaryFinish(uv_work_t*, int i = -1);
+  bool addDict(const char*);
   //
-  // Add a word to a dictionary object at runtime (ephemerally).
+  // Add or remove a word to a dictionary object at runtime (ephemerally).
   //
   static v8::Handle<v8::Value> addWord(const v8::Arguments&);
-  //
-  // Remove a word from a dictionary object at runtime (ephemerally).
-  //
+  static v8::Handle<v8::Value> addWordSync(const v8::Arguments&);
   static v8::Handle<v8::Value> removeWord(const v8::Arguments&);
-  //
-  // Does the bulk of the work for adding and removing a word
-  //
+  static v8::Handle<v8::Value> removeWordSync(const v8::Arguments&);
   static v8::Handle<v8::Value> addRemoveWordInit(const v8::Arguments&, bool);
-  //
-  // new nodehun work
-  //
-  static void createNewNodehunWork(uv_work_t*);  
-  //
-  // new nodehun finish
-  //
-  static void createNewNodehunFinish(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) functionality to add a new dictionary
-  // to the current dictionary object.
-  //
-  static void addDictionaryWork(uv_work_t*);
-  //
-  // The call back to merge the thread back and return the result
-  // of a successful addition of a dictionary to the dictionary
-  // at runtime.
-  //
-  static void addDictionaryFinish(uv_work_t*, int i = -1);
-  //
-  // add/remove a word work (threaded) to the dictionary
-  // object at runtime.
-  //
+  static v8::Handle<v8::Value> addRemoveWordInitSync(const v8::Arguments&, bool);
   static void addRemoveWordWork(uv_work_t*);  
-  //
-  // the call back to merge the thread that added/removed
-  // a word from the dictionary object.
-  //
   static void addRemoveWordFinish(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) to check to see if a given
-  // word is spelled correctly.
-  //
-  static void checkCorrect(uv_work_t*);
-  //
-  // The call back to merge the thread that checked for whether
-  // a word was spelled correctly.
-  //
-  static void sendCorrect(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) to check to see if a given
-  // string and if not what any possible suggestions might be.
-  //
-  static void checkSuggestions(uv_work_t*);
-  //
-  // The call back to merge the thread that checked for spelling
-  // suggestions from the dictionary object to return the result
-  // of the work.
-  //
-  static void sendSuggestions(uv_work_t*, int i = -1);
+  bool addRemoveWord(const char*, bool);
   //
   // node wrapped hunspell stem function
   //
   static v8::Handle<v8::Value> stem(const v8::Arguments&);
-  //
-  // Threaded work on hunspell to get stem results from hunspell
-  //
+  static v8::Handle<v8::Value> stemSync(const v8::Arguments&);
   static void stemWork(uv_work_t*);
-  //
-  // Join thread and return stemming results
-  //
   static void stemFinish(uv_work_t*, int i = -1);
+  int stemWord(char***, const char*);
   //
   // node wrapped hunspell generate function
   //
   static v8::Handle<v8::Value> generate(const v8::Arguments&);
-  //
-  // Threaded work on hunspell to get generate results from hunspell
-  //
+  static v8::Handle<v8::Value> generateSync(const v8::Arguments&);
   static void generateWork(uv_work_t*);
-  //
-  // Join thread and return generateming results
-  //
-  static void generateFinish(uv_work_t*, int i = -1); 
+  static void generateFinish(uv_work_t*, int i = -1);
+  int generateWord(char***, const char*, const char*);
   //
   // node wrapped hunspell analyze function
   //
   static v8::Handle<v8::Value> analyze(const v8::Arguments&);
-  //
-  // Threaded work on hunspell to get analyze results from hunspell
-  //
+  static v8::Handle<v8::Value> analyzeSync(const v8::Arguments&);
   static void analyzeWork(uv_work_t*);
-  //
-  // Join thread and return analyzeming results
-  //
-  static void analyzeFinish(uv_work_t*, int i = -1);  
+  static void analyzeFinish(uv_work_t*, int i = -1);
+  int analyzeWord(char***, const char*);
 };
