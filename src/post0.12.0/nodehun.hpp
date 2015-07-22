@@ -156,18 +156,28 @@ protected:
   static void New();
   //
   // Returns a boolean value as to whether a word is spelled correctly
-  // or not (i.e. whether it exists in the dictionary or not).
+  // or not (i.e. whether it exists in the dictionary or not). `checkCorrect`
+  // is the threaded work and sendCorrect receives the join. `spell` is 
+  // the member call with locking.
   //
   static void isCorrect(const FunctionCallbackInfo<Value>&);
+  static void isCorrectSync(const FunctionCallbackInfo<Value>&);
+  static void checkCorrect(uv_work_t*);
+  static void sendCorrect(uv_work_t*, int i = -1);
+  bool spell(char*)
   //
-  // Suggest a singularly correct spelling from a string.
+  // Suggest a singularly correct spelling from a string. `spellSuggestions`
+  // sends multiple suggestions. `checkSuggestions` is the threaded worker,
+  // `sendSuggestions` receives the join. `spellCheck` is the member method
+  // with locking.
   //
   static void spellSuggest(const FunctionCallbackInfo<Value>&);
-  //
-  // Suggest a list of possible spellings from a string.
-  // Ordered by correctness.
-  //
+  static void spellSuggestSync(const FunctionCallbackInfo<Value>&);
   static void spellSuggestions(const FunctionCallbackInfo<Value>&);
+  static void spellSuggestionsSync(const FunctionCallbackInfo<Value>&);
+  static void checkSuggestions(uv_work_t*);
+  static void sendSuggestions(uv_work_t*, int i = -1);
+  int spellCheck(bool*, char***, char*);
   //
   // Add a new dictionary to an existing dictionary object at runtime (ephemerally).
   //
@@ -213,27 +223,6 @@ protected:
   // a word from the dictionary object.
   //
   static void addRemoveWordFinish(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) to check to see if a given
-  // word is spelled correctly.
-  //
-  static void checkCorrect(uv_work_t*);
-  //
-  // The call back to merge the thread that checked for whether
-  // a word was spelled correctly.
-  //
-  static void sendCorrect(uv_work_t*, int i = -1);
-  //
-  // The work (threaded) to check to see if a given
-  // string and if not what any possible suggestions might be.
-  //
-  static void checkSuggestions(uv_work_t*);
-  //
-  // The call back to merge the thread that checked for spelling
-  // suggestions from the dictionary object to return the result
-  // of the work.
-  //
-  static void sendSuggestions(uv_work_t*, int i = -1);
   //
   // node wrapped hunspell stem function
   //
