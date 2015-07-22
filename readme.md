@@ -51,6 +51,23 @@ dict.spellSuggest('calor',function(err, correct, suggestion, origWord){
 });
 ```
 
+Checking for Correctness
+------------------------
+Nodehun offers a method that returns true or false if the passed word exists in the dictionary, i.e. is "correct".
+
+```js
+var nodehun = require('nodehun');
+var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
+var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
+var dict = new nodehun(affbuf,dictbuf);
+
+dict.isCorrect('color',function(err, correct, origWord){
+	console.log(err, correct, origWord);
+	// because "color" is a defined word in the US English dictionary
+	// the output will be: null, true, "color"
+});
+```
+
 Spell Suggestions
 -----------------
 Nodehun also offers a method that returns an array of words that could possibly match a misspelled word, ordered by most likely to be correct.
