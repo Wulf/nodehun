@@ -1,5 +1,9 @@
 Nodehun
 =======
+Looking for Maintainers
+-----------------------
+I am done maintaining and working on nodehun. If you feel you are qualified to take over the project please email me at nathanjsweet@gmail.com. I will not answer any current or forthecoming issues, as I do not have time.
+
 Introduction
 ------------
 Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module. 
