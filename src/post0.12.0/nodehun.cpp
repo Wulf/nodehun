@@ -4,14 +4,14 @@ using namespace v8;
 
 Persistent<Function> Nodehun::SpellDictionary::constructor;
 
-void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> module) 
+void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> module)
 {
   Isolate* isolate = Isolate::GetCurrent();
   Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate, New);
   tpl->SetClassName(String::NewFromUtf8(isolate, "NodehunDictionary"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   //static
-  NODE_SET_METHOD(tpl, "createNewNodehun" , createNewNodehun);    
+  NODE_SET_METHOD((v8::Local<v8::Template>) tpl, "createNewNodehun" , createNewNodehun);    
   //prototype
   NODE_SET_PROTOTYPE_METHOD(tpl, "isCorrect", isCorrect);
   NODE_SET_PROTOTYPE_METHOD(tpl, "isCorrectSync", isCorrectSync);
@@ -31,7 +31,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(tpl, "generateSync", generateSync);
   NODE_SET_PROTOTYPE_METHOD(tpl, "analyze", analyze);
   NODE_SET_PROTOTYPE_METHOD(tpl, "analyzeSync", analyzeSync);
-  
+
   constructor.Reset(isolate, tpl->GetFunction());
   module->Set(String::NewFromUtf8(isolate, "exports"), tpl->GetFunction());
 }
@@ -40,9 +40,9 @@ void Nodehun::SpellDictionary::createNewNodehun(const FunctionCallbackInfo<Value
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
-  
+
   int argl = args.Length();
-  if(argl > 2 && args[2]->IsFunction()) {      
+  if(argl > 2 && args[2]->IsFunction()) {
     Local<Function> callback = Local<Function>::Cast(args[2]);
     const unsigned argc = 2;
     Local<Value> argv[argc];
@@ -72,7 +72,7 @@ void Nodehun::SpellDictionary::createNewNodehun(const FunctionCallbackInfo<Value
 }
 
 void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
-{  
+{
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
   nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL, true);
   delete nodeData->aff;
@@ -81,7 +81,7 @@ void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
 
 void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
 {
-  Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);  
+  Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
   Isolate *isolate = nodeData->isolate;;
   HandleScope scope(isolate);
   const unsigned argc = 2;
@@ -107,7 +107,7 @@ Nodehun::SpellDictionary::SpellDictionary(Hunspell *obj)
   spellClass = obj;
 }
 
-void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -139,12 +139,12 @@ void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args)
 
     Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(node::Buffer::Data(args[0].As<Object>()), node::Buffer::Data(args[1].As<Object>()));
     uv_rwlock_init(&(obj->rwlock));
-    obj->Wrap(args.Holder());  
+    obj->Wrap(args.Holder());
   }
   args.GetReturnValue().Set(args.Holder());
 }
 
-void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -161,7 +161,7 @@ void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args
     }
     else {
       Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
-      Nodehun::CorrectData* corrData = new Nodehun::CorrectData();  
+      Nodehun::CorrectData* corrData = new Nodehun::CorrectData();
       String::Utf8Value arg0(args[0]->ToString());
 
       corrData->isolate = isolate;
@@ -177,7 +177,7 @@ void Nodehun::SpellDictionary::isCorrect(const FunctionCallbackInfo<Value>& args
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::isCorrectSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::isCorrectSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -192,7 +192,7 @@ void Nodehun::SpellDictionary::isCorrectSync(const FunctionCallbackInfo<Value>& 
   }
 }
 
-bool Nodehun::SpellDictionary::spell(const char* word) 
+bool Nodehun::SpellDictionary::spell(const char* word)
 {
   uv_rwlock_rdlock(&(this->rwlock));
   bool correct = this->spellClass->spell(word);
@@ -200,7 +200,7 @@ bool Nodehun::SpellDictionary::spell(const char* word)
   return correct;
 }
 
-void Nodehun::SpellDictionary::checkCorrect(uv_work_t* request) 
+void Nodehun::SpellDictionary::checkCorrect(uv_work_t* request)
 {
   Nodehun::CorrectData* corrData = static_cast<Nodehun::CorrectData*>(request->data);
   corrData->isCorrect = corrData->obj->spell(corrData->word.c_str());
@@ -224,7 +224,7 @@ void Nodehun::SpellDictionary::sendCorrect(uv_work_t* request, int i)
 }
 
 
-void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -241,7 +241,7 @@ void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& a
     }
     else {
       Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
-      Nodehun::SpellData* spellData = new Nodehun::SpellData();  
+      Nodehun::SpellData* spellData = new Nodehun::SpellData();
       String::Utf8Value arg0(args[0]->ToString());
 
       spellData->isolate = isolate;
@@ -257,7 +257,7 @@ void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& a
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::spellSuggestSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::spellSuggestSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -280,7 +280,7 @@ void Nodehun::SpellDictionary::spellSuggestSync(const FunctionCallbackInfo<Value
 
 }
 
-void Nodehun::SpellDictionary::spellSuggestions(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::spellSuggestions(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -298,7 +298,7 @@ void Nodehun::SpellDictionary::spellSuggestions(const FunctionCallbackInfo<Value
     else {
       Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
       Nodehun::SpellData* spellData = new Nodehun::SpellData();
-      String::Utf8Value arg0(args[0]->ToString());  
+      String::Utf8Value arg0(args[0]->ToString());
 
       spellData->isolate = isolate;
       spellData->callback.Reset(isolate, callback);
@@ -313,7 +313,7 @@ void Nodehun::SpellDictionary::spellSuggestions(const FunctionCallbackInfo<Value
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::spellSuggestionsSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::spellSuggestionsSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -346,7 +346,7 @@ int Nodehun::SpellDictionary::spellCheck(bool* correct, char*** arr, const char*
   return sugg;
 }
 
-void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request) 
+void Nodehun::SpellDictionary::checkSuggestions(uv_work_t* request)
 {
   Nodehun::SpellData* spellData = static_cast<Nodehun::SpellData*>(request->data);
   spellData->numSuggest = spellData->obj->spellCheck(&(spellData->wordCorrect), &(spellData->suggestions), spellData->word.c_str());
@@ -387,7 +387,7 @@ void Nodehun::SpellDictionary::sendSuggestions(uv_work_t* request, int i)
   delete spellData;
 }
 
-void Nodehun::SpellDictionary::addDictionary(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::addDictionary(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -420,14 +420,14 @@ void Nodehun::SpellDictionary::addDictionary(const FunctionCallbackInfo<Value>& 
     strcpy(dictData->dict, node::Buffer::Data(args[0].As<Object>()));
     dictData->obj = obj;
     dictData->request.data = dictData;
-  
+
     uv_queue_work(uv_default_loop(), &dictData->request,
 		  Nodehun::SpellDictionary::addDictionaryWork, Nodehun::SpellDictionary::addDictionaryFinish);
   }
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::addDictionarySync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::addDictionarySync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
   HandleScope scope(isolate);
@@ -461,7 +461,7 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i)
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
   Isolate* isolate = dictData->isolate;
   HandleScope scope(isolate);
-  
+
   if(dictData->callbackExists) {
     const unsigned argc = 1;
     Local<Value> argv[argc];
@@ -474,22 +474,22 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i)
   delete dictData;
 }
 
-void Nodehun::SpellDictionary::addWord(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::addWord(const FunctionCallbackInfo<Value>& args)
 {
   Nodehun::SpellDictionary::addRemoveWordInit(args, false);
 }
 
-void Nodehun::SpellDictionary::addWordSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::addWordSync(const FunctionCallbackInfo<Value>& args)
 {
   Nodehun::SpellDictionary::addRemoveWordInitSync(args, false);
 }
 
-void Nodehun::SpellDictionary::removeWord(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::removeWord(const FunctionCallbackInfo<Value>& args)
 {
   Nodehun::SpellDictionary::addRemoveWordInit(args, true);
 }
 
-void Nodehun::SpellDictionary::removeWordSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::removeWordSync(const FunctionCallbackInfo<Value>& args)
 {
   Nodehun::SpellDictionary::addRemoveWordInitSync(args, true);
 }
@@ -517,7 +517,7 @@ void Nodehun::SpellDictionary::addRemoveWordInit(const FunctionCallbackInfo<Valu
 	return;
       }
       wordData->callback.Reset(isolate, callback);
-      wordData->callbackExists = true;      
+      wordData->callbackExists = true;
     }
     else if (!args[0]->IsString()) {
       delete wordData;
@@ -531,7 +531,7 @@ void Nodehun::SpellDictionary::addRemoveWordInit(const FunctionCallbackInfo<Valu
     wordData->request.data = wordData;
     uv_queue_work(uv_default_loop(), &wordData->request,
 		  Nodehun::SpellDictionary::addRemoveWordWork, Nodehun::SpellDictionary::addRemoveWordFinish);
-      
+
   }
   args.GetReturnValue().SetUndefined();
 }
@@ -574,7 +574,7 @@ void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i)
   Nodehun::WordData* wordData = static_cast<Nodehun::WordData*>(request->data);
   Isolate* isolate = wordData->isolate;
   HandleScope scope(isolate);
-  
+
   if(wordData->callbackExists) {
     const unsigned argc = 2;
     Local<Value> argv[argc];
@@ -587,10 +587,10 @@ void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i)
   delete wordData;
 }
 
-void Nodehun::SpellDictionary::stem(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::stem(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   int argl = args.Length();
   if(argl > 1 && args[1]->IsFunction()) {
     Local<Function> callback = Local<Function>::Cast(args[1]);
@@ -617,10 +617,10 @@ void Nodehun::SpellDictionary::stem(const FunctionCallbackInfo<Value>& args)
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::stemSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::stemSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   if(args.Length() > 0 && args[0]->IsString()) {
     Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
     v8::String::Utf8Value arg0(args[0]->ToString());
@@ -636,7 +636,7 @@ void Nodehun::SpellDictionary::stemSync(const FunctionCallbackInfo<Value>& args)
     args.GetReturnValue().SetUndefined();
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string.")));
   }
- 
+
 }
 
 int Nodehun::SpellDictionary::stemWord(char*** arr, const char* word)
@@ -658,7 +658,7 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
   Nodehun::StemData* stemData = static_cast<Nodehun::StemData*>(request->data);
   Isolate* isolate = stemData->isolate;
   HandleScope scope(isolate);
-  
+
   const unsigned int argc = 2;
   Local<Value> argv[argc];
   Local<Array> suglist = Array::New(isolate, stemData->numResults);
@@ -674,10 +674,10 @@ void Nodehun::SpellDictionary::stemFinish(uv_work_t* request, int i)
   delete stemData;
 }
 
-void Nodehun::SpellDictionary::generate(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::generate(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   int argl = args.Length();
   if(argl > 2 && args[2]->IsFunction()) {
     Local<Function> callback = Local<Function>::Cast(args[2]);
@@ -713,10 +713,10 @@ void Nodehun::SpellDictionary::generate(const FunctionCallbackInfo<Value>& args)
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::generateSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::generateSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   if(args.Length() > 1 && args[0]->IsString() && args[1]->IsString()) {
     Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
     v8::String::Utf8Value arg0(args[0]->ToString());
@@ -754,7 +754,7 @@ void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i)
   Nodehun::GenerateData* generateData = static_cast<Nodehun::GenerateData*>(request->data);
   Isolate* isolate = generateData->isolate;
   HandleScope scope(isolate);
-  
+
   const unsigned int argc = 2;
   Local<Value> argv[argc];
   Local<Array> suglist = Array::New(isolate, generateData->numResults);
@@ -770,10 +770,10 @@ void Nodehun::SpellDictionary::generateFinish(uv_work_t* request, int i)
   delete generateData;
 }
 
-void Nodehun::SpellDictionary::analyze(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::analyze(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   int argl = args.Length();
   if(argl > 1 && args[1]->IsFunction()) {
     Local<Function> callback = Local<Function>::Cast(args[1]);
@@ -800,10 +800,10 @@ void Nodehun::SpellDictionary::analyze(const FunctionCallbackInfo<Value>& args)
   args.GetReturnValue().SetUndefined();
 }
 
-void Nodehun::SpellDictionary::analyzeSync(const FunctionCallbackInfo<Value>& args) 
+void Nodehun::SpellDictionary::analyzeSync(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
-  HandleScope scope(isolate);  
+  HandleScope scope(isolate);
   if(args.Length() > 0 && args[0]->IsString()) {
     Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
     v8::String::Utf8Value arg0(args[0]->ToString());
@@ -819,7 +819,7 @@ void Nodehun::SpellDictionary::analyzeSync(const FunctionCallbackInfo<Value>& ar
     args.GetReturnValue().SetUndefined();
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string.")));
   }
-  
+
 }
 
 int Nodehun::SpellDictionary::analyzeWord(char*** arr, const char* word)
@@ -841,7 +841,7 @@ void Nodehun::SpellDictionary::analyzeFinish(uv_work_t* request, int i)
   Nodehun::AnalyzeData* analyzeData = static_cast<Nodehun::AnalyzeData*>(request->data);
   Isolate* isolate = analyzeData->isolate;
   HandleScope scope(isolate);
-  
+
   const unsigned int argc = 2;
   Local<Value> argv[argc];
   Local<Array> suglist = Array::New(isolate, analyzeData->numResults);
