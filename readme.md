@@ -31,7 +31,7 @@ Installation
 
 Spell Suggest and Initialization
 --------------------------------
-Initializing nodehun is very easy, simply add the buffer of an affix and dictionary file as the first two arguments of the constructor. The mechanics of the dictionaries nodehun processes is fairly simple to understand. Nodehun ships with US english and Canadian English (look in the examples folder), but tons of languages are available for free at [open office](http://extensions.services.openoffice.org/dictionary), see the readme file in the dictionaries folder for more directions. Of course you don't need to use the filesystem you could use a distributed data store to store the dictionaries. Please do not actually use `readFileSync`.
+Initializing nodehun is very easy, simply add the file path of an affix and dictionary file as the first two arguments of the constructor. The mechanics of the dictionaries nodehun processes is fairly simple to understand. Nodehun ships with US english and Canadian English (look in the examples folder), but tons of languages are available for free at [open office](http://extensions.services.openoffice.org/dictionary), see the readme file in the dictionaries folder for more directions.
 
 ```js
 var nodehun = require('nodehun');
@@ -88,7 +88,7 @@ dict.spellSuggestions('calor',function(err, correct, suggestions, origWord){
 
 Add Dictionary
 --------------
-Nodehun also can add another dictionary on top of an existing dictionary object at runtime (this means it is not permanent) in order to merge two dictionaries. Once again, please do not actually use `readFileSync`.
+Nodehun also can add another dictionary on top of an existing dictionary object at runtime (this means it is not permanent) in order to merge two dictionaries.
 
 ```js
 var nodehun = require('nodehun');
