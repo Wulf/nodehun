@@ -92,10 +92,7 @@ Nodehun also can add another dictionary on top of an existing dictionary object 
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dictbuf2 = fs.readFileSync(somedirectory+'/en_CA.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
 	console.log(err, correct, suggestion, origWord);
@@ -103,7 +100,7 @@ dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
 	// the output will be: null, false, "color", 'colour'
 });
 
-dict.addDictionary(dictbuf2,function(err){
+dict.addDictionary(somedirectory+'/en_CA.dic',function(err){
 	if(!err)
 		USDictionary.spellSuggest('colour',function(err, correct, suggestion, origWord){
 			console.log(err, correct, suggestion, origWord);
@@ -216,10 +213,8 @@ Initializing the nodehun object can be bumpy if you're doing it a lot. A large d
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
 
-nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
+nodehun.createNewNodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic',function(err,dict){
 	if(!err)
 		dict.spellSuggest('color',function(err, correct, suggestion){
 			console.log(err, correct, suggestion);
