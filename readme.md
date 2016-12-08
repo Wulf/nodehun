@@ -35,9 +35,8 @@ Initializing nodehun is very easy, simply add the buffer of an affix and diction
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
+
 dict.spellSuggest('color',function(err, correct, suggestion, origWord){
 	console.log(err, correct, suggestion, origWord);
 	// because "color" is a defined word in the US English dictionary
@@ -57,9 +56,7 @@ Nodehun offers a method that returns true or false if the passed word exists in 
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.isCorrect('color',function(err, correct, origWord){
 	console.log(err, correct, origWord);
@@ -74,9 +71,7 @@ Nodehun also offers a method that returns an array of words that could possibly 
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.spellSuggestions('color',function(err, correct, suggestions, origWord){
 	console.log(err, correct, suggestions, origWord);
@@ -124,9 +119,7 @@ Nodehun can also add a single word to a dictionary at runtime (this means it is 
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
 	console.log(err, correct, suggestions, origWord);
@@ -151,9 +144,7 @@ Nodehun can also remove a single word from a dictionary at runtime (this means i
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.spellSuggest('color',function(err, correct, suggestion, origWord){
 	console.log(err, correct, suggestion, origWord);
@@ -178,9 +169,7 @@ Nodehun exposes the Hunspell `stem` function which analyzes the roots of words. 
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.stem('telling',function(err, stems){
 	console.log(err, stems);
@@ -194,9 +183,7 @@ Nodehun exposes the Hunspell `analyze` function which analyzes a word and return
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.analyze('telling',function(err, fields){
 	console.log(err, fields);
@@ -210,9 +197,7 @@ Nodehun exposes the Hunspell `generate` function which generates a varition of a
 
 ```js
 var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+var dict = new nodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic');
 
 dict.generate('telling', 'ran', function(err,res){
     console.log(err, res);
