@@ -74,7 +74,7 @@ void Nodehun::SpellDictionary::createNewNodehun(const FunctionCallbackInfo<Value
 void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
 {
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
-  nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL, true);
+  nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL);
   delete nodeData->aff;
   delete nodeData->dict;
 }
@@ -99,7 +99,7 @@ void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf)
 {
-  spellClass = new Hunspell(affbuf, dictbuf, NULL, true);
+  spellClass = new Hunspell(affbuf, dictbuf, NULL);
 }
 
 Nodehun::SpellDictionary::SpellDictionary(Hunspell *obj)
@@ -128,16 +128,18 @@ void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args)
       isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Constructor requires two arguments.")));
       return;
     }
-    if(!node::Buffer::HasInstance(args[0])){
-      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a buffer")));
+    if(!args[0]->IsString()){
+      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string")));
       return;
     }
-    if(!node::Buffer::HasInstance(args[1])){
-      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a buffer")));
+    if(!args[1]->IsString()){
+      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a string")));
       return;
     }
 
-    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(node::Buffer::Data(args[0].As<Object>()), node::Buffer::Data(args[1].As<Object>()));
+    String::Utf8Value arg0(args[0]->ToString());
+	String::Utf8Value arg1(args[1]->ToString());
+    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(*arg0, *arg1);
     uv_rwlock_init(&(obj->rwlock));
     obj->Wrap(args.Holder());
   }
