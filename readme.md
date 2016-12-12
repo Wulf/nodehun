@@ -1,8 +1,10 @@
 Nodehun
 =======
+[![Build Status](https://travis-ci.org/Wulf/nodehun.svg?branch=master)](https://travis-ci.org/Wulf/nodehun) [![Build status](https://ci.appveyor.com/api/projects/status/9ky5lws4d191qrui/branch/master?svg=true)](https://ci.appveyor.com/project/Wulf/nodehun/branch/master)
+
 Introduction
 ------------
-Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module. 
+Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module.
 
 Warning on Versions
 -------------------
@@ -14,7 +16,7 @@ dict.addWord('foo',function(success, word){
    console.log(success, word);
    // if the method succeeded then
    // the output will be : true, 'foo'
-n}); 
+n});
 //1.XX.XX/2.XX.XX version:
 dict.addWord('xxxxxxx', function(err, word){
    console.log(err);
@@ -137,7 +139,7 @@ dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
 dict.addWord('colour',function(err, word){
 	if(!err)
 		dict.spellSuggest('colour',function(err, correct, suggestions, origWord){
-			console.log(err, correct, suggestions, origWord);	
+			console.log(err, correct, suggestions, origWord);
 			// because "colour" has been added to the US dictionary object.
 			// the output will be: true, null, 'colour'
 		});
