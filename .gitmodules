@@ -1,0 +1,4 @@
+[submodule "src/hunspell"]
+	path = src/hunspell
+	url = https://github.com/nathanjsweet/hunspell.git
+	branch = buffer_interface
