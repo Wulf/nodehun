@@ -47,22 +47,22 @@ void Nodehun::SpellDictionary::createNewNodehun(const FunctionCallbackInfo<Value
     const unsigned argc = 2;
     Local<Value> argv[argc];
     argv[1] = Local<Value>::New(isolate, Null(isolate));
-    if(!node::Buffer::HasInstance(args[0])) {
-      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a buffer"));
+	if(!args[0]->IsString()){
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
       callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
     }
-    else if(!node::Buffer::HasInstance(args[1])) {
-      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a buffer"));
+    else if(!args[1]->IsString()){
+      argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a string"));
       callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
     }
     else {
       Nodehun::NodehunData* nodeData = new Nodehun::NodehunData();
       nodeData->isolate = isolate;
       nodeData->callback.Reset(isolate, callback);
-      nodeData->aff = new char[node::Buffer::Length(args[0])];
-      strcpy(nodeData->aff, node::Buffer::Data(args[0].As<Object>()));
-      nodeData->dict = new char[node::Buffer::Length(args[1])];
-      strcpy(nodeData->dict, node::Buffer::Data(args[1].As<Object>()));
+	  String::Utf8Value arg0(args[0]->ToString());
+      String::Utf8Value arg1(args[1]->ToString());
+      nodeData->aff.append(*arg0);
+      nodeData->dict.append(*arg1);
       nodeData->request.data = nodeData;
       uv_queue_work(uv_default_loop(), &nodeData->request,
 		    Nodehun::SpellDictionary::createNewNodehunWork, Nodehun::SpellDictionary::createNewNodehunFinish);
@@ -74,9 +74,7 @@ void Nodehun::SpellDictionary::createNewNodehun(const FunctionCallbackInfo<Value
 void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
 {
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
-  nodeData->obj = new Hunspell(nodeData->aff, nodeData->dict, NULL, true);
-  delete nodeData->aff;
-  delete nodeData->dict;
+  nodeData->obj = new Hunspell(nodeData->aff.c_str(), nodeData->dict.c_str(), NULL);
 }
 
 void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
@@ -99,7 +97,7 @@ void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf)
 {
-  spellClass = new Hunspell(affbuf, dictbuf, NULL, true);
+  spellClass = new Hunspell(affbuf, dictbuf, NULL);
 }
 
 Nodehun::SpellDictionary::SpellDictionary(Hunspell *obj)
@@ -128,16 +126,18 @@ void Nodehun::SpellDictionary::New(const FunctionCallbackInfo<Value>& args)
       isolate->ThrowException(Exception::Error(String::NewFromUtf8(isolate, "Constructor requires two arguments.")));
       return;
     }
-    if(!node::Buffer::HasInstance(args[0])){
-      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a buffer")));
+    if(!args[0]->IsString()){
+      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string")));
       return;
     }
-    if(!node::Buffer::HasInstance(args[1])){
-      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a buffer")));
+    if(!args[1]->IsString()){
+      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a string")));
       return;
     }
 
-    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(node::Buffer::Data(args[0].As<Object>()), node::Buffer::Data(args[1].As<Object>()));
+    String::Utf8Value arg0(args[0]->ToString());
+	String::Utf8Value arg1(args[1]->ToString());
+    Nodehun::SpellDictionary *obj = new Nodehun::SpellDictionary(*arg0, *arg1);
     uv_rwlock_init(&(obj->rwlock));
     obj->Wrap(args.Holder());
   }
@@ -400,8 +400,8 @@ void Nodehun::SpellDictionary::addDictionary(const FunctionCallbackInfo<Value>& 
       Local<Function> callback = Local<Function>::Cast(args[1]);
       const unsigned argc = 1;
       Local<Value> argv[argc];
-      if(!node::Buffer::HasInstance(args[0])) {
-	argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a buffer"));
+      if(!args[0]->IsString()){
+	argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
 	callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
 	delete dictData;
 	args.GetReturnValue().SetUndefined();
@@ -410,14 +410,14 @@ void Nodehun::SpellDictionary::addDictionary(const FunctionCallbackInfo<Value>& 
       dictData->callback.Reset(isolate, callback);
       dictData->callbackExists = true;
     }
-    if(!node::Buffer::HasInstance(args[0])) {
+    if(!args[0]->IsString()){
       delete dictData;
-      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a buffer")));
+      isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string")));
       return;
     }
+	String::Utf8Value arg0(args[0]->ToString());
     dictData->isolate = isolate;
-    dictData->dict = new char[node::Buffer::Length(args[0])];
-    strcpy(dictData->dict, node::Buffer::Data(args[0].As<Object>()));
+    dictData->dict.append(*arg0);
     dictData->obj = obj;
     dictData->request.data = dictData;
 
@@ -453,7 +453,7 @@ bool Nodehun::SpellDictionary::addDict(const char* dictionary)
 void Nodehun::SpellDictionary::addDictionaryWork(uv_work_t* request)
 {
   Nodehun::DictData* dictData = static_cast<Nodehun::DictData*>(request->data);
-  dictData->success = dictData->obj->addDict(dictData->dict);
+  dictData->success = dictData->obj->addDict(dictData->dict.c_str());
 }
 
 void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i)
@@ -470,7 +470,6 @@ void Nodehun::SpellDictionary::addDictionaryFinish(uv_work_t* request, int i)
     cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
     dictData->callback.Reset();
   }
-  delete dictData->dict;
   delete dictData;
 }
 

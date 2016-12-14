@@ -7,7 +7,7 @@
       ],
       'cflags': [ '-O3' ],
       'dependencies': [
-        'src/hunspell/binding.gyp:hunspell'
+        'src/binding.gyp:hunspell'
       ],
     },
   ]

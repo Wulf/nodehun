@@ -50,7 +50,7 @@ namespace Nodehun {
     v8::Persistent<v8::Function> callback;
     v8::Isolate* isolate;
     bool callbackExists;
-    char * dict;
+    std::string dict;
     bool success;
     Nodehun::SpellDictionary* obj;
   };
@@ -115,8 +115,8 @@ namespace Nodehun {
     uv_work_t request;
     v8::Persistent<v8::Function> callback;
     v8::Isolate *isolate;
-    char * aff;
-    char * dict;
+    std::string aff;
+    std::string dict;
     Hunspell *obj;
   };
 }
