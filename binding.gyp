@@ -2,7 +2,6 @@
   'targets': [{
     'target_name': 'Nodehun',
     'sources': [
-      'src/Nodehun.cpp',
       'src/NodehunObject.cpp'
     ],
     'cflags': [ '-O3' ],
