@@ -2,16 +2,12 @@ language: node_js
 
 os:
   - linux
-  - osx
 
 node_js:
   - "node" # latest
   - "6"
   - "5"
   - "4"
-  - "iojs"
-  - "0.12"
-  - "0.10"
 
 addons:
   # addons required for compiling native node modules
