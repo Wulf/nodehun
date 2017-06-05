@@ -1,7 +1,7 @@
 {
-  "name": "nodehun",
+  "name": "Nodehun",
   "version": "2.0.11",
-  "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features. Hunspell is a first class spellcheck library used by Google, Apple, and Mozilla.",
+  "description": "Native bindings to Hunspell",
   "license": "MIT",
   "keywords": [
     "spell",
@@ -12,8 +12,8 @@
     "spell checker",
     "check"
   ],
-  "repository": "https://github.com/nathanjsweet/nodehun",
-  "bugs": "https://github.com/nathanjsweet/nodehun/issues",
+  "repository": "https://github.com/wulf/nodehun",
+  "bugs": "https://github.com/wulf/nodehun/issues",
   "author": "Nathan Sweet <nathanjsweet@gmail.com>",
   "contributors": [
     "Nathan Sweet <nathanjsweet@gmail.com>",
@@ -22,15 +22,18 @@
     "Espen Hovlandsdal <espen@hovlandsdal.com>",
     "Thomas Beverley <tom.beverley101@gmail.com>"
   ],
-  "main": "build/Release/nodehun",
+  "main": "build/Release/Nodehun",
   "dependencies": {},
   "devDependencies": {
     "dictionary-en-gb": "^1.0.2",
     "dictionary-en-us": "^1.0.2",
     "dictionary-nl": "^1.0.2",
+    "nan": "^2.6.2",
     "tape": "^4.6.0"
   },
   "scripts": {
-    "test": "node test"
+    "test": "node test",
+    "build": "node-gyp rebuild",
+    "dev": "node test/nan.js"
   }
 }
