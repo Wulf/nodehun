@@ -267,3 +267,14 @@ If you want to create a new Hunspell dictionary you will need a base affix file.
 	Aaron/M
 
 Notice that the "S" flag denotes a proper noun that isn't capitalized, otherwise look in the docs.
+
+Development/Contributing
+------------------------
+**Compile Nodehun!**
+```
+$ npm run build
+```
+If you find that compilation takes too long, try the following before building:
+```
+$ export JOBS=max
+```
