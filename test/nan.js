@@ -7,4 +7,8 @@ var Nodehun = require('..');
 console.log('constructor:',Nodehun);
 const instance = new Nodehun(affbuf, dictbuf)
 console.log('instance.test:',instance.test);
-console.log('instance.correct:',instance.stem());
+console.log('instance.correctSync:',instance.correctSync("drinkabl"));
+
+instance.correct('drinkabl', function(error, isCorrect) {
+  console.log('instance.correct', [error, isCorrect]);
+})

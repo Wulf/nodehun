@@ -1,32 +1,28 @@
 #include "NodehunObject.hpp"
 
-Nan::Persistent<v8::Function> MyObject::constructor;
+Nan::Persistent<v8::Function> Nodehun::constructor;
 
-MyObject::MyObject(const char* affixBuffer, const char* dictionaryBuffer) {
+Nodehun::Nodehun(const char* affixBuffer, const char* dictionaryBuffer) {
    hunspellInstance = new Hunspell(affixBuffer, dictionaryBuffer, NULL, true);
 }
 
-MyObject::~MyObject() {
+Nodehun::~Nodehun() {
   if (hunspellInstance) {
     delete hunspellInstance;
     hunspellInstance = NULL;
   }
 }
 
-NAN_METHOD(MyObject::New) {
+NAN_METHOD(Nodehun::New) {
   if (info.IsConstructCall()) {
-    // Invoked as constructor: `new MyObject(...)`
-    if(info[0]->IsUndefined() || !info[0]->IsObject()) {
-      // first parameter isn't the affix buffer!
-      // TODO: is there a way to check if the argument is a buffer?
-      info.GetReturnValue().GetIsolate()->ThrowException(Nan::Error("The first argument must be a Buffer!"));
+    // Invoked as constructor: `new Nodehun(...)`
+    if(!node::Buffer::HasInstance(info[0])) {
+      info.GetIsolate()->ThrowException(Nan::Error("The first argument must be a Buffer!"));
       return;
     }
 
-    if(info[1]->IsUndefined() || !info[1]->IsObject()) {
-      // second parameter isn't the dictionary buffer!
-      // TODO: is there a way to check if the argument is a buffer?
-      info.GetReturnValue().GetIsolate()->ThrowException(Nan::Error("The second argument must be a Buffer!"));
+    if(!node::Buffer::HasInstance(info[0])) {
+      info.GetIsolate()->ThrowException(Nan::Error("The second argument must be a Buffer!"));
       return;
     }
 
@@ -36,11 +32,11 @@ NAN_METHOD(MyObject::New) {
     char* affixBuffer = node::Buffer::Data(affixBufferObject);
     char* dictionaryBuffer = node::Buffer::Data(dictionaryBufferObject);
 
-    MyObject* obj = new MyObject(affixBuffer, dictionaryBuffer);
+    Nodehun* obj = new Nodehun(affixBuffer, dictionaryBuffer);
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
   } else {
-    info.GetReturnValue().GetIsolate()->ThrowException(Nan::Error("Use the new operator to create an instance of this object."));
+    info.GetIsolate()->ThrowException(Nan::Error("Use the new operator to create an instance of this object."));
     return;
   }
 }
@@ -48,87 +44,110 @@ NAN_METHOD(MyObject::New) {
 //============================================================================//
 // Spelling API
 //============================================================================//
-NAN_METHOD(MyObject::suggest) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::suggest) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::suggestSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::suggestSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::suggestOne) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::suggestOne) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::suggestOneSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::suggestOneSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::corret) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::correct) {
+  Nan::HandleScope scope;
+
+  if(info.Length() > 1 && info[0]->IsString() && info[1]->IsFunction()) {
+    std::string *word = new std::string(*v8::String::Utf8Value(info[0]->ToString()));
+    Hunspell *hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
+    Nan::Callback *callback = new Nan::Callback(info[1].As<v8::Function>());
+
+    info.GetReturnValue().SetUndefined();
+    Nan::AsyncQueueWorker(new Nodehun::CorrectWorker(callback, hunspellInstance, word));
+  } else {
+    info.GetIsolate()->ThrowException(Nan::TypeError("First argument must be a string, second argument must be a function."));
+  }
 }
 
-NAN_METHOD(MyObject::correctSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::correctSync) {
+    Nan::HandleScope scope;
+
+    if(info.Length() > 0 && info[0]->IsString()) {
+      Hunspell* hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
+      v8::String::Utf8Value word(info[0]->ToString());
+      bool correct = hunspellInstance->spell(*word);
+      info.GetReturnValue().Set(correct);
+    } else {
+      info.GetReturnValue().SetUndefined();
+      info.GetIsolate()->ThrowException(Nan::TypeError("First argument must be a string."));
+    }
+
+  // info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
 //============================================================================//
 // Analysis API
 //============================================================================//
 
-NAN_METHOD(MyObject::stem) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::stem) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::stemSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::stemSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::generate) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::generate) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::generateSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::generateSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::analyze) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::analyze) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::analyzeSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::analyzeSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
 //============================================================================//
 // Dictionary Management API
 //============================================================================//
 
-NAN_METHOD(MyObject::addWord) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::addWord) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::addWordSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::addWordSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::removeWord) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::removeWord) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::removeWordSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::removeWordSync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::addDictionary) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::addDictionary) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-NAN_METHOD(MyObject::addDictionarySync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetReturnValue().GetIsolate(), "Not yet implemented."));
+NAN_METHOD(Nodehun::addDictionarySync) {
+  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
 }
 
-void MyObject::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module) {
+void Nodehun::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module) {
   Nan::HandleScope scope;
 
   // Prepare constructor template
@@ -137,27 +156,27 @@ void MyObject::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module)
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
   // Prototype
-  Nan::SetPrototypeMethod(tpl, "suggest", MyObject::suggest);
-  Nan::SetPrototypeMethod(tpl, "suggestSync", MyObject::suggestSync);
-  Nan::SetPrototypeMethod(tpl, "suggestOne", MyObject::suggestOne);
-  Nan::SetPrototypeMethod(tpl, "suggestOneSync", MyObject::suggestOneSync);
-  Nan::SetPrototypeMethod(tpl, "correct", MyObject::corret);
-  Nan::SetPrototypeMethod(tpl, "correctSync", MyObject::correctSync);
-  Nan::SetPrototypeMethod(tpl, "stem", MyObject::stem);
-  Nan::SetPrototypeMethod(tpl, "stemSync", MyObject::stemSync);
-  Nan::SetPrototypeMethod(tpl, "generate", MyObject::generate);
-  Nan::SetPrototypeMethod(tpl, "generateSync", MyObject::generateSync);
-  Nan::SetPrototypeMethod(tpl, "analyze", MyObject::analyze);
-  Nan::SetPrototypeMethod(tpl, "analyzeSync", MyObject::analyzeSync);
-  Nan::SetPrototypeMethod(tpl, "addWord", MyObject::addWord);
-  Nan::SetPrototypeMethod(tpl, "addWordSync", MyObject::addWordSync);
-  Nan::SetPrototypeMethod(tpl, "removeWord", MyObject::removeWord);
-  Nan::SetPrototypeMethod(tpl, "removeWordSync", MyObject::removeWordSync);
-  Nan::SetPrototypeMethod(tpl, "addDictionary", MyObject::addDictionary);
-  Nan::SetPrototypeMethod(tpl, "addDictionarySync", MyObject::addDictionarySync);
+  Nan::SetPrototypeMethod(tpl, "suggest", Nodehun::suggest);
+  Nan::SetPrototypeMethod(tpl, "suggestSync", Nodehun::suggestSync);
+  Nan::SetPrototypeMethod(tpl, "suggestOne", Nodehun::suggestOne);
+  Nan::SetPrototypeMethod(tpl, "suggestOneSync", Nodehun::suggestOneSync);
+  Nan::SetPrototypeMethod(tpl, "correct", Nodehun::correct);
+  Nan::SetPrototypeMethod(tpl, "correctSync", Nodehun::correctSync);
+  Nan::SetPrototypeMethod(tpl, "stem", Nodehun::stem);
+  Nan::SetPrototypeMethod(tpl, "stemSync", Nodehun::stemSync);
+  Nan::SetPrototypeMethod(tpl, "generate", Nodehun::generate);
+  Nan::SetPrototypeMethod(tpl, "generateSync", Nodehun::generateSync);
+  Nan::SetPrototypeMethod(tpl, "analyze", Nodehun::analyze);
+  Nan::SetPrototypeMethod(tpl, "analyzeSync", Nodehun::analyzeSync);
+  Nan::SetPrototypeMethod(tpl, "addWord", Nodehun::addWord);
+  Nan::SetPrototypeMethod(tpl, "addWordSync", Nodehun::addWordSync);
+  Nan::SetPrototypeMethod(tpl, "removeWord", Nodehun::removeWord);
+  Nan::SetPrototypeMethod(tpl, "removeWordSync", Nodehun::removeWordSync);
+  Nan::SetPrototypeMethod(tpl, "addDictionary", Nodehun::addDictionary);
+  Nan::SetPrototypeMethod(tpl, "addDictionarySync", Nodehun::addDictionarySync);
 
   constructor.Reset(tpl->GetFunction());
   module->Set(Nan::New("exports").ToLocalChecked(), tpl->GetFunction());
 }
 
-NODE_MODULE(Nodehun, MyObject::Init)
+NODE_MODULE(Nodehun, Nodehun::Init)
