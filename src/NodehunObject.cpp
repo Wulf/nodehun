@@ -45,19 +45,52 @@ NAN_METHOD(Nodehun::New) {
 // Spelling API
 //============================================================================//
 NAN_METHOD(Nodehun::suggest) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
+  Nan::HandleScope scope;
+
+  if(info.Length() > 1 && info[0]->IsString() && info[1]->IsFunction()) {
+    std::string *word = new std::string(*v8::String::Utf8Value(info[0]->ToString()));
+    Hunspell *hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
+    Nan::Callback *callback = new Nan::Callback(info[1].As<v8::Function>());
+
+    info.GetReturnValue().SetUndefined();
+    Nan::AsyncQueueWorker(new Nodehun::SuggestWorker(callback, hunspellInstance, word));
+  } else {
+    info.GetIsolate()->ThrowException(Nan::TypeError("First argument must be a string, second argument must be a function."));
+  }
 }
 
 NAN_METHOD(Nodehun::suggestSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
-}
+  Nan::HandleScope scope;
 
-NAN_METHOD(Nodehun::suggestOne) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
-}
+  if(info.Length() > 0 && info[0]->IsString()) {
+    Hunspell *hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
+    v8::String::Utf8Value word(info[0]->ToString());
 
-NAN_METHOD(Nodehun::suggestOneSync) {
-  info.GetReturnValue().Set(v8::String::NewFromUtf8(info.GetIsolate(), "Not yet implemented."));
+    bool correct = hunspellInstance->spell(*word);
+    if(correct) {
+      info.GetReturnValue().Set(Nan::New<v8::Array>(0));
+    } else {
+      char** suggestionsFound = NULL;
+      int size = hunspellInstance->suggest(&suggestionsFound, *word);
+
+      v8::Local<v8::Array> suggestions = Nan::New<v8::Array>(size);
+      for(int i = 0; i < size; i++) {
+        Nan::MaybeLocal<v8::String> maybeSuggestion = Nan::New(suggestionsFound[i]);
+
+        if(maybeSuggestion.IsEmpty()) {
+          Nan::Set(suggestions, i, Nan::Undefined());
+        } else {
+          Nan::Set(suggestions, i, maybeSuggestion.ToLocalChecked());
+        }
+      }
+      info.GetReturnValue().Set(suggestions);
+
+      hunspellInstance->free_list(&suggestionsFound, size);
+    }
+  } else {
+    info.GetReturnValue().SetUndefined();
+    info.GetIsolate()->ThrowException(Nan::TypeError("First argument must be a string."));
+  }
 }
 
 NAN_METHOD(Nodehun::correct) {
@@ -79,7 +112,7 @@ NAN_METHOD(Nodehun::correctSync) {
     Nan::HandleScope scope;
 
     if(info.Length() > 0 && info[0]->IsString()) {
-      Hunspell* hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
+      Hunspell *hunspellInstance = Nan::ObjectWrap::Unwrap<Nodehun>(info.Holder())->hunspellInstance;
       v8::String::Utf8Value word(info[0]->ToString());
       bool correct = hunspellInstance->spell(*word);
       info.GetReturnValue().Set(correct);
@@ -158,8 +191,6 @@ void Nodehun::Init(v8::Local<v8::Object> exports, v8::Local<v8::Object> module) 
   // Prototype
   Nan::SetPrototypeMethod(tpl, "suggest", Nodehun::suggest);
   Nan::SetPrototypeMethod(tpl, "suggestSync", Nodehun::suggestSync);
-  Nan::SetPrototypeMethod(tpl, "suggestOne", Nodehun::suggestOne);
-  Nan::SetPrototypeMethod(tpl, "suggestOneSync", Nodehun::suggestOneSync);
   Nan::SetPrototypeMethod(tpl, "correct", Nodehun::correct);
   Nan::SetPrototypeMethod(tpl, "correctSync", Nodehun::correctSync);
   Nan::SetPrototypeMethod(tpl, "stem", Nodehun::stem);
