@@ -208,7 +208,7 @@ dict.analyze('telling',function(err, fields){
 
 Generate
 ----
-Nodehun exposes the Hunspell `generate` function which generates a varition of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
+Nodehun exposes the Hunspell `generate` function which generates a variation of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
 
 ```js
 var nodehun = require('nodehun');
@@ -248,7 +248,7 @@ nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
 
 A Warning on Synchronous Methods
 -----------------------------
-There are synchronous versions of all the methods listed above, but they are not doucmented as they are only present for people who really know and understand what they are doing. I highly recommend looking at the C++ source code if you are going to use these methods in a production environment as the locks involved with them can create some counterintuitive situations. For example, if you were to remove a word synchronously while many different suggestion threads were working in the backgound the remove word method could take seconds to complete while it waits to take control of the read-write lock. This is obviously disastrous in a situation where you would be servicing many requests.
+There are synchronous versions of all the methods listed above, but they are not documented as they are only present for people who really know and understand what they are doing. I highly recommend looking at the C++ source code if you are going to use these methods in a production environment as the locks involved with them can create some counterintuitive situations. For example, if you were to remove a word synchronously while many different suggestion threads were working in the background the remove word method could take seconds to complete while it waits to take control of the read-write lock. This is obviously disastrous in a situation where you would be servicing many requests.
 
 A Note About Open Office Dictionaries
 -------------------------------------
