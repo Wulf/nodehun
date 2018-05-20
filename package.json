@@ -1,6 +1,6 @@
 {
   "name": "nodehun",
-  "version": "2.0.11",
+  "version": "2.0.12",
   "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features. Hunspell is a first class spellcheck library used by Google, Apple, and Mozilla.",
   "license": "MIT",
   "keywords": [
