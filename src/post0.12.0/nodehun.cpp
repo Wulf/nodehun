@@ -11,7 +11,7 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   tpl->SetClassName(String::NewFromUtf8(isolate, "NodehunDictionary"));
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   //static
-  NODE_SET_METHOD((v8::Local<v8::Template>) tpl, "createNewNodehun" , createNewNodehun);    
+  NODE_SET_METHOD((v8::Local<v8::Template>) tpl, "createNewNodehun" , createNewNodehun);
   //prototype
   NODE_SET_PROTOTYPE_METHOD(tpl, "isCorrect", isCorrect);
   NODE_SET_PROTOTYPE_METHOD(tpl, "isCorrectSync", isCorrectSync);
@@ -82,7 +82,7 @@ void Nodehun::SpellDictionary::createNewNodehunWork(uv_work_t* request)
 void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
 {
   Nodehun::NodehunData* nodeData = static_cast<Nodehun::NodehunData*>(request->data);
-  Isolate *isolate = nodeData->isolate;;
+  Isolate *isolate = nodeData->isolate;
   HandleScope scope(isolate);
   const unsigned argc = 2;
   Local<Value> argv[argc];
