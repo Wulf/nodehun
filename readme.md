@@ -1,8 +1,10 @@
 Nodehun
 =======
+[![Build Status](https://travis-ci.org/Wulf/nodehun.svg?branch=master)](https://travis-ci.org/Wulf/nodehun) [![Build status](https://ci.appveyor.com/api/projects/status/9ky5lws4d191qrui/branch/master?svg=true)](https://ci.appveyor.com/project/Wulf/nodehun/branch/master)
+
 Introduction
 ------------
-Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module. 
+Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module.
 
 Warning on Versions
 -------------------
@@ -14,7 +16,7 @@ dict.addWord('foo',function(success, word){
    console.log(success, word);
    // if the method succeeded then
    // the output will be : true, 'foo'
-n}); 
+n});
 //1.XX.XX/2.XX.XX version:
 dict.addWord('xxxxxxx', function(err, word){
    console.log(err);
@@ -127,7 +129,7 @@ dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
 dict.addWord('colour',function(err, word){
 	if(!err)
 		dict.spellSuggest('colour',function(err, correct, suggestions, origWord){
-			console.log(err, correct, suggestions, origWord);	
+			console.log(err, correct, suggestions, origWord);
 			// because "colour" has been added to the US dictionary object.
 			// the output will be: true, null, 'colour'
 		});
@@ -190,7 +192,7 @@ dict.analyze('telling',function(err, fields){
 
 Generate
 ----
-Nodehun exposes the Hunspell `generate` function which generates a varition of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
+Nodehun exposes the Hunspell `generate` function which generates a variation of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
 
 ```js
 var nodehun = require('nodehun');
@@ -226,7 +228,7 @@ nodehun.createNewNodehun(somedirectory+'/en_US.aff',somedirectory+'/en_US.dic',f
 
 A Warning on Synchronous Methods
 -----------------------------
-There are synchronous versions of all the methods listed above, but they are not doucmented as they are only present for people who really know and understand what they are doing. I highly recommend looking at the C++ source code if you are going to use these methods in a production environment as the locks involved with them can create some counterintuitive situations. For example, if you were to remove a word synchronously while many different suggestion threads were working in the backgound the remove word method could take seconds to complete while it waits to take control of the read-write lock. This is obviously disastrous in a situation where you would be servicing many requests.
+There are synchronous versions of all the methods listed above, but they are not documented as they are only present for people who really know and understand what they are doing. I highly recommend looking at the C++ source code if you are going to use these methods in a production environment as the locks involved with them can create some counterintuitive situations. For example, if you were to remove a word synchronously while many different suggestion threads were working in the background the remove word method could take seconds to complete while it waits to take control of the read-write lock. This is obviously disastrous in a situation where you would be servicing many requests.
 
 A Note About Open Office Dictionaries
 -------------------------------------

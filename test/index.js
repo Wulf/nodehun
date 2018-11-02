@@ -75,7 +75,7 @@ function start(dictionaries) {
     // });
 
     t.test('Hun#isCorrect(value, callback)', function (st) {
-      st.plan(4);
+      st.plan(5);
 
       us.isCorrect('colour', function (err, correct) {
         st.ifErr(err, 'should not throw');
@@ -95,6 +95,10 @@ function start(dictionaries) {
           true,
           'should pass `true` when a word is correctly spelled'
         );
+      });
+
+      us.isCorrect('😀', function(err, correct) {
+        st.ifErr(err, 'should not throw when the word is an emoji');
       });
     });
 

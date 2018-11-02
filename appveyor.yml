@@ -1,0 +1,33 @@
+version: "{build}"
+
+init:
+  # Windows line endings.
+  - git config --global core.autocrlf input
+
+environment:
+  matrix:
+    - nodejs_version: "10"
+    - nodejs_version: "9"
+    - nodejs_version: "8"
+    - nodejs_version: "7"
+
+platform:
+  - x64
+  - x86
+
+install:
+  - git submodule update --init --recursive
+  - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version)
+
+before_build:
+  - npm install -g node-gyp
+
+build_script:
+  - npm install -g npm@latest
+  - npm install # calls node-gyp rebuild
+
+test_script:
+  # Output versions for reference.
+  - node --version
+  - npm --version
+  - npm test
