@@ -40,6 +40,20 @@ namespace Nodehun {
     std::string word;
     Nodehun::SpellDictionary* obj;
   };
+
+  //{{HM
+  struct WordData2 {
+	  uv_work_t request;
+	  v8::Persistent<v8::Function> callback;
+	  v8::Isolate* isolate;
+	  bool callbackExists;
+	  bool success;
+	  std::string word;
+	  std::string example;
+	  Nodehun::SpellDictionary* obj;
+  };
+  //}}
+
   //
   // represents a work baton to asynchronously add a new
   // new dictionary, during runtime, to the object of 
@@ -196,6 +210,15 @@ protected:
   static void addRemoveWordWork(uv_work_t*);  
   static void addRemoveWordFinish(uv_work_t*, int i = -1);
   bool addRemoveWord(const char*, bool);
+  //{{HM
+  static void addWordWithAffix(const FunctionCallbackInfo<Value>&);
+  static void addWordWithAffixSync(const FunctionCallbackInfo<Value>&);
+  static void addWordWithAffixInit(const FunctionCallbackInfo<Value>&);
+  static void addWordWithAffixInitSync(const FunctionCallbackInfo<Value>&);
+  static void addWordWithAffixWork(uv_work_t* request);
+  static void addWordWithAffixFinish(uv_work_t* request, int i);
+  bool addWordWithAffix(const char*, const char*);
+  //}}
   //
   // node wrapped hunspell stem function
   //

@@ -23,6 +23,10 @@ void Nodehun::SpellDictionary::Init(Handle<Object> exports, Handle<Object> modul
   NODE_SET_PROTOTYPE_METHOD(tpl, "addDictionarySync", addDictionarySync);
   NODE_SET_PROTOTYPE_METHOD(tpl, "addWord", addWord);
   NODE_SET_PROTOTYPE_METHOD(tpl, "addWordSync", addWordSync);
+  //{{HM
+  NODE_SET_PROTOTYPE_METHOD(tpl, "addWordWithAffix", addWordWithAffix);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "addWordWithAffixSync", addWordWithAffixSync);
+  //}}
   NODE_SET_PROTOTYPE_METHOD(tpl, "removeWord", removeWord);
   NODE_SET_PROTOTYPE_METHOD(tpl, "removeWordSync", removeWordSync);
   NODE_SET_PROTOTYPE_METHOD(tpl, "stem", stem);
@@ -95,7 +99,6 @@ void Nodehun::SpellDictionary::createNewNodehunFinish(uv_work_t* request, int i)
   nodeData->callback.Reset();
   delete nodeData;
 }
-
 
 Nodehun::SpellDictionary::SpellDictionary(const char *affbuf, const char *dictbuf)
 {
@@ -223,7 +226,6 @@ void Nodehun::SpellDictionary::sendCorrect(uv_work_t* request, int i)
   delete corrData;
 }
 
-
 void Nodehun::SpellDictionary::spellSuggest(const FunctionCallbackInfo<Value>& args)
 {
   Isolate* isolate = args.GetIsolate();
@@ -277,7 +279,6 @@ void Nodehun::SpellDictionary::spellSuggestSync(const FunctionCallbackInfo<Value
     args.GetReturnValue().SetUndefined();
     isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string.")));
   }
-
 }
 
 void Nodehun::SpellDictionary::spellSuggestions(const FunctionCallbackInfo<Value>& args)
@@ -586,6 +587,104 @@ void Nodehun::SpellDictionary::addRemoveWordFinish(uv_work_t* request, int i)
   }
   delete wordData;
 }
+
+//{{HM
+void Nodehun::SpellDictionary::addWordWithAffix(const FunctionCallbackInfo<Value>& args)
+{
+	Nodehun::SpellDictionary::addWordWithAffixInit(args);
+}
+void Nodehun::SpellDictionary::addWordWithAffixSync(const FunctionCallbackInfo<Value>& args)
+{
+	Nodehun::SpellDictionary::addWordWithAffixInitSync(args);
+}
+void Nodehun::SpellDictionary::addWordWithAffixInit(const FunctionCallbackInfo<Value>& args)
+{
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+	int argl = args.Length();
+	if (argl > 1) {
+		Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
+		String::Utf8Value arg0(args[0]->ToString());
+		String::Utf8Value arg1(args[1]->ToString());
+		Nodehun::WordData2* wordData = new Nodehun::WordData2();
+		wordData->callbackExists = false;
+		if (argl > 2 && args[2]->IsFunction()) {
+			Local<Function> callback = Local<Function>::New(isolate, Local<Function>::Cast(args[2]));
+			const unsigned argc = 3;
+			Local<Value> argv[argc];
+			if (!args[0]->IsString() || !args[1]->IsString()) {
+				argv[0] = Exception::TypeError(String::NewFromUtf8(isolate, "First argument must be a string"));
+				argv[1] = Exception::TypeError(String::NewFromUtf8(isolate, "Second argument must be a string"));
+				argv[2] = Local<Value>::New(isolate, Null(isolate));
+				callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+				delete wordData;
+				args.GetReturnValue().SetUndefined();
+				return;
+			}
+			wordData->callback.Reset(isolate, callback);
+			wordData->callbackExists = true;
+		}
+		else if (!args[0]->IsString() || !args[1]->IsString()) {
+			delete wordData;
+			isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First two arguments must be string.")));
+			return;
+		}
+		wordData->isolate = isolate;
+		wordData->word.append(*arg0);
+		wordData->example.append(*arg1);
+		wordData->obj = obj;
+		wordData->request.data = wordData;
+		uv_queue_work(uv_default_loop(), &wordData->request,
+			Nodehun::SpellDictionary::addWordWithAffixWork, Nodehun::SpellDictionary::addWordWithAffixFinish);
+	}
+	args.GetReturnValue().SetUndefined();
+}
+void Nodehun::SpellDictionary::addWordWithAffixInitSync(const FunctionCallbackInfo<Value>& args)
+{
+	Isolate* isolate = args.GetIsolate();
+	HandleScope scope(isolate);
+	if (args.Length() > 1 && args[0]->IsString() && args[1]->IsString()) {
+		Nodehun::SpellDictionary* obj = ObjectWrap::Unwrap<Nodehun::SpellDictionary>(args.Holder());
+		String::Utf8Value arg0(args[0]->ToString());
+		String::Utf8Value arg1(args[1]->ToString());
+		args.GetReturnValue().Set(obj->addWordWithAffix(*arg0, *arg1));
+	}
+	else {
+		args.GetReturnValue().SetUndefined();
+		isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "First two arguments must be string.")));
+	}
+}
+bool Nodehun::SpellDictionary::addWordWithAffix(const char* word, const char* example)
+{
+	uv_rwlock_wrlock(&(this->rwlock));
+	int status = this->spellClass->add_with_affix(word, example);
+	uv_rwlock_wrunlock(&(this->rwlock));
+	return status == 0;
+}
+void Nodehun::SpellDictionary::addWordWithAffixWork(uv_work_t* request)
+{
+	Nodehun::WordData2* wordData = static_cast<Nodehun::WordData2*>(request->data);
+	wordData->success = wordData->obj->addWordWithAffix(wordData->word.c_str(), wordData->example.c_str());
+}
+void Nodehun::SpellDictionary::addWordWithAffixFinish(uv_work_t* request, int i)
+{
+	Nodehun::WordData2* wordData = static_cast<Nodehun::WordData2*>(request->data);
+	Isolate* isolate = wordData->isolate;
+	HandleScope scope(isolate);
+
+	if (wordData->callbackExists) {
+		const unsigned argc = 3;
+		Local<Value> argv[argc];
+		argv[0] = wordData->success ? Local<Value>::New(isolate, Null(isolate)) : Exception::TypeError(String::NewFromUtf8(isolate, "There was an error changing the status of the word. The dictionary may be corrupted, or the word may be malfored."));
+		argv[1] = wordData->success ? Local<Value>::New(isolate, String::NewFromUtf8(isolate, wordData->word.c_str())) : Local<Value>::New(isolate, Null(isolate));
+		argv[2] = wordData->success ? Local<Value>::New(isolate, String::NewFromUtf8(isolate, wordData->example.c_str())) : Local<Value>::New(isolate, Null(isolate));
+		Local<Function> cb = Local<Function>::New(isolate, wordData->callback);
+		cb->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+		wordData->callback.Reset();
+	}
+	delete wordData;
+}
+//}}
 
 void Nodehun::SpellDictionary::stem(const FunctionCallbackInfo<Value>& args)
 {
