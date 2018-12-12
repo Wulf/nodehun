@@ -28,13 +28,6 @@
 		'GenerateDebugInformation': 'true',
 	    },
 	},
-	'conditions': [
-	    ['OS == "win"', {
-		'defines': [
-		    'WIN32'
-		],
-	    }]
-	],
     },
 
     'targets': [
