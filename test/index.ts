@@ -1,13 +1,10 @@
-'use strict';
-
-/* Dependencies. */
-var test = require('tape');
-var Hun = require('..');
+const test = require('tape');
+const Nodehun = require('bindings')('Nodehun');
 
 /* Constants. */
-var EN_GB = 'en-gb';
-var EN_US = 'en-us';
-var NL = 'nl';
+const EN_GB = 'en-gb';
+const EN_US = 'en-us';
+const NL = 'nl';
 
 /**
  * Start the tests with loaded `dictionaries`.
@@ -16,19 +13,19 @@ var NL = 'nl';
  */
 function start(dictionaries) {
   test('nodehun()', function (t) {
-    var us;
-    var gb;
-    var nl;
+    let us: Nodehun;
+    let gb: Nodehun;
+    let nl: Nodehun;
 
     t.equal(
-      typeof Hun,
+      typeof Nodehun,
       'function',
       'should expose a function'
     );
 
     t.throws(
       function () {
-        Hun();
+        Nodehun();
       },
       /^Error: Use the new operator to create an instance of this object\.$/,
       'should throw without `new`'
@@ -36,201 +33,196 @@ function start(dictionaries) {
 
     t.throws(
       function () {
-        new Hun();
+        // @ts-ignore: this is done on purpose!
+        new Nodehun();
       },
-      /^Error: Constructor requires two arguments\.$/,
+      /^Error: Invalid number of arguments\.$/,
       'should throw when missing parameters'
     );
 
-    us = new Hun(dictionaries[EN_US].aff, dictionaries[EN_US].dic);
-    gb = new Hun(dictionaries[EN_GB].aff, dictionaries[EN_GB].dic);
-    nl = new Hun(dictionaries[NL].aff, dictionaries[NL].dic);
+    us = new Nodehun(dictionaries[EN_US].aff, dictionaries[EN_US].dic);
+    gb = new Nodehun(dictionaries[EN_GB].aff, dictionaries[EN_GB].dic);
+    nl = new Nodehun(dictionaries[NL].aff, dictionaries[NL].dic);
 
     t.equal(
-      us instanceof Hun,
+      us instanceof Nodehun,
       true,
       'should create a new instance from a dictionary (1)'
     );
 
     t.equal(
-      gb instanceof Hun,
+      gb instanceof Nodehun,
       true,
       'should create a new instance from a dictionary (2)'
     );
 
-    // t.test('Hun#wordCharacters()', function (st) {
-    //   st.equal(
-    //     us.wordCharacters(),
-    //     '0123456789',
-    //     'should return the defined word-characters'
-    //   );
-    //
-    //   st.equal(
-    //     gb.wordCharacters(),
-    //     null,
-    //     'should return `null` when not defined'
-    //   );
-    //
-    //   st.end();
-    // });
-
-    t.test('Hun#isCorrect(value, callback)', function (st) {
-      st.plan(5);
-
-      us.isCorrect('colour', function (err, correct) {
-        st.ifErr(err, 'should not throw');
-
-        st.equal(
-          correct,
-          false,
-          'should pass `false` when a word is not correctly spelled'
-        );
-      });
-
-      gb.isCorrect('colour', function (err, correct) {
-        st.ifErr(err, 'should not throw');
-
-        st.equal(
-          correct,
-          true,
-          'should pass `true` when a word is correctly spelled'
-        );
-      });
-
-      us.isCorrect('😀', function(err, correct) {
-        st.ifErr(err, 'should not throw when the word is an emoji');
-      });
+    t.test('Nodehun#getWordCharacters()', function (st) {
+      st.equal(
+        us.getWordCharacters(),
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþ',
+        'should return the defined word-characters'
+      );
+    
+      st.equal(
+        gb.getWordCharacters(),
+        null,
+        'should return `null` when not defined'
+      );
+    
+      st.end();
     });
 
-    t.test('Hun#isCorrectSync(value)', function (st) {
+    t.test('Nodehun#spell(value)', async function (st) {
+      try {
+        const spell = await us.spell('colour');
+        st.equal(spell, false, 'should pass `false` when a word is not correctly spelled')
+      } catch (e) {
+        st.fail(e, 'should not throw');
+      }
+      
+      try {
+        const spell = await gb.spell('colour');
+        st.equal(spell, true, 'should pass `true` when a word is correctly spelled')
+      } catch (e) {
+        st.fail(e, 'should not throw');
+      }
+
+      try {
+        const spell = await us.spell('😀');
+      } catch (e) {
+        st.fail(e, 'should not throw when the word is an emoji');
+      }
+    });
+
+    t.test('Nodehun#spellSync(value)', function (st) {
       st.equal(
-        us.isCorrectSync('colour'),
+        us.spellSync('colour'),
         false,
         'should return `false` when a word is not correctly spelled'
       );
 
       st.equal(
-        us.isCorrectSync('color'),
+        us.spellSync('color'),
         true,
         'should return `true` when a word is correctly spelled (1)'
       );
 
       st.equal(
-        us.isCorrectSync('c'),
+        us.spellSync('c'),
         true,
         'should return `true` when a word is correctly spelled (2)'
       );
 
       st.equal(
-        us.isCorrectSync(' '),
+        us.spellSync(' '),
         true,
         'should return `true` without word'
       );
 
       st.equal(
-        us.isCorrectSync('.'),
+        us.spellSync('.'),
         true,
         'should return `true` for non-words'
       );
 
       st.equal(
-        us.isCorrectSync('ABDUL'),
+        us.spellSync('ABDUL'),
         true,
         'should check for sentence-case when upper-case (ok)'
       );
 
       st.equal(
-        us.isCorrectSync('COLOUR'),
+        us.spellSync('COLOUR'),
         false,
         'should check for sentence-case when upper-case (not ok)'
       );
 
       st.equal(
-        us.isCorrectSync('Color'),
+        us.spellSync('Color'),
         true,
         'should check for lower-case (ok)'
       );
 
       st.equal(
-        us.isCorrectSync('Colour'),
+        us.spellSync('Colour'),
         false,
         'should check for lower-case (not ok)'
       );
 
       st.equal(
-        us.isCorrectSync('Colour'),
+        us.spellSync('Colour'),
         false,
         'should check for lower-case (not ok)'
       );
 
       st.equal(
-        nl.isCorrectSync('DVD'),
+        nl.spellSync('DVD'),
         false,
         'should not check upper-case for sentence-case when KEEPCASE'
       );
 
       st.equal(
-        nl.isCorrectSync('dVd'),
+        nl.spellSync('dVd'),
         false,
         'should not check other casing for lower-case when KEEPCASE'
       );
 
       st.equal(
-        nl.isCorrectSync('eierlevendbarend'),
+        nl.spellSync('eierlevendbarend'),
         true,
         'should support ONLYINCOMPOUND (ok)'
       );
 
       st.equal(
-        nl.isCorrectSync('eier'),
+        nl.spellSync('eier'),
         false,
         'should support ONLYINCOMPOUND (not ok)'
       );
 
       st.equal(
-        us.isCorrectSync('21st'),
+        us.spellSync('21st'),
         true,
         'should support compounds (1)'
       );
 
       st.equal(
-        us.isCorrectSync('20st'),
+        us.spellSync('20st'),
         false,
         'should support compounds (2)'
       );
 
       st.equal(
-        us.isCorrectSync('20th'),
+        us.spellSync('20th'),
         true,
         'should support compounds (3)'
       );
 
       st.equal(
-        us.isCorrectSync('23st'),
+        us.spellSync('23st'),
         false,
         'should support compounds (4)'
       );
 
       st.equal(
-        us.isCorrectSync('23th'),
+        us.spellSync('23th'),
         false,
         'should support compounds (5)'
       );
 
       st.equal(
-        us.isCorrectSync('23rd'),
+        us.spellSync('23rd'),
         true,
         'should support compounds (6)'
       );
 
       st.equal(
-        us.isCorrectSync('12th'),
+        us.spellSync('12th'),
         true,
         'should support compounds (7)'
       );
 
       st.equal(
-        us.isCorrectSync('22nd'),
+        us.spellSync('22nd'),
         true,
         'should support compounds (8)'
       );
@@ -238,153 +230,132 @@ function start(dictionaries) {
       st.end();
     });
 
-    t.test('Hun#spellSuggestions(value, callback)', function (st) {
-      st.plan(8);
-
-      us.spellSuggestions('color', function (err, correct, suggestions, origWord) {
-        st.ifErr(err, 'should not throw');
+    t.test('Nodehun#suggest(value)', async function (st) {
+      try {
+        const suggestions = await us.suggest('color');
 
         st.equal(
-          correct,
-          true,
-          'should pass `correct: true` when correct'
-        );
-
-        st.deepEqual(
           suggestions,
-          [],
-          'should pass an empty `suggestions` array when correct'
+          null,
+          'should return `null` when correct'
         );
+      } catch (e) {
+        st.fail(e, 'should not throw');
+      }
 
-        st.equal(
-          origWord,
-          'color',
-          'should pass `origWord` when correct'
-        );
-      });
-
-      us.spellSuggestions('colour', function (err, correct, suggestions, origWord) {
-        st.ifErr(err, 'should not throw');
-
-        st.equal(
-          correct,
-          false,
-          'should pass `correct: false` when incorrect'
-        );
-
+      try {
+        const suggestions = await us.suggest('colour');
         st.deepEqual(
           suggestions.slice(0, 3),
           ['color', 'co lour', 'co-lour'],
           'should pass an array of `suggestions` when incorrect'
         );
+      } catch (e) {
+        st.fail(e, 'should not throw');
+      }
 
-        st.equal(
-          origWord,
-          'colour',
-          'should pass `origWord` when incorrect'
-        );
-      });
+      st.end();
     });
 
-    t.test('Hun#spellSuggestionsSync(value)', function (st) {
+    t.test('Nodehun#suggestSync(value)', function (st) {
       st.deepEqual(
-        us.spellSuggestionsSync('color'),
+        us.suggestSync('color'),
         [],
         'should return an empty array when correct (1)'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('c'),
+        us.suggestSync('c'),
         [],
         'should return an empty array when correct (2)'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('colour').slice(0, 5),
+        us.suggestSync('colour').slice(0, 5),
         ['color', 'co lour', 'co-lour', 'col our', 'col-our'],
         'should suggest alternatives'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('propper').slice(0, 5),
+        us.suggestSync('propper').slice(0, 5),
         ['proper', 'popper', 'prosper', 'cropper', 'propped'],
         'should suggest alternatives'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync(' '),
+        us.suggestSync(' '),
         [],
         'should return an empty array for empty values'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('.'),
+        us.suggestSync('.'),
         [],
         'should return an empty array for non-words'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('Colour').slice(0, 5),
+        us.suggestSync('Colour').slice(0, 5),
         ['Co lour', 'Co-lour', 'Col our', 'Col-our', 'Color'],
         'should suggest alternatives for sentence-case'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('COLOUR').slice(0, 5),
+        us.suggestSync('COLOUR').slice(0, 5),
         ['COLOR', 'CO LOUR', 'CO-LOUR', 'COL OUR', 'COL-OUR'],
         'should suggest alternatives for upper-case'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('coLOUR').slice(0, 5),
+        us.suggestSync('coLOUR').slice(0, 5),
         ['col Our', 'co Lour', 'color', 'co-lour', 'col-our'],
         'should suggest alternatives for funky-case'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('html'),
+        us.suggestSync('html'),
         ['HTML', 'ht ml', 'ht-ml'],
         'should suggest uppercase versions'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('collor').slice(0, 5),
+        us.suggestSync('collor').slice(0, 5),
         ['color', 'collar', 'coll or', 'coll-or', 'collator'],
         'should suggest removals'
       );
 
       st.not(
-        us.spellSuggestionsSync('coor').indexOf('color'),
+        us.suggestSync('coor').indexOf('color'),
         -1,
         'should suggest additions'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('cloor'),
+        us.suggestSync('cloor'),
         ['color', 'floor'],
         'should suggest switches'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('cokor'),
+        us.suggestSync('cokor'),
         ['color', 'cork', 'Cork'],
         'should suggest insertions'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('bulshit'),
+        us.suggestSync('bulshit'),
         ['bullish'],
         'should not suggest alternatives marked with `NOSUGGEST`'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('consize'),
+        us.suggestSync('consize'),
         ['concise', 'con size', 'con-size'],
         'should suggest based on replacements'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('npmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpm'),
+        us.suggestSync('npmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpmnpm'),
         [],
         'should not overflow on too long values'
       );
@@ -392,110 +363,110 @@ function start(dictionaries) {
       st.end();
     });
 
-    t.test('Hun#addWord(value, callback)', function (st) {
-      st.plan(3);
+    t.test('Nodehun#add(value)', async function (st) {
+      st.plan(1);
 
-      us.addWord('npm', function (err, ok) {
-        st.ifErr(err);
-        st.equal(ok, 'npm', 'should pass the added word');
-        st.ok(us.isCorrectSync('npm'), 'should now mark as correct');
+      await us.add('npm')
+      st.ok(us.spellSync('npm'), 'should now mark as correct');
 
-        us.removeWordSync('npm');
-      });
+      us.removeSync('npm');
+
+      st.end();
     });
 
-    t.test('Hun#addWordSync(value)', function (st) {
+    t.test('Nodehun#addSync(value)', function (st) {
       st.equal(
-        us.isCorrectSync('npm'),
+        us.spellSync('npm'),
         false,
         'should initially be marked as incorrect'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('npm').slice(0, 3),
+        us.suggestSync('npm').slice(0, 3),
         ['bpm', 'pm', 'rpm'],
         'should initially receive suggestions'
       );
 
       st.equal(
-        us.addWordSync('npm'),
+        us.addSync('npm'),
         true,
         'should return whether successful'
       );
 
       st.equal(
-        us.isCorrectSync('npm'),
+        us.spellSync('npm'),
         true,
         'should now mark as correct'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('npm'),
+        us.suggestSync('npm'),
         [],
         'should now no longer receive suggestions'
       );
 
-      us.removeWordSync('npm');
+      us.removeSync('npm');
 
       st.end();
     });
 
-    // t.test('Hun#addWordSync(value, model)', function (st) {
+    // t.test('Nodehun#addSync(value, model)', function (st) {
     //   /* `azc` is a Dutch word only properly spelled
     //    * in its lower-case form. */
     //   st.equal(
-    //     nl.addWordSync('npm', 'azc'),
+    //     nl.addSync('npm', 'azc'),
     //     nl,
     //     'should return the context object'
     //   );
     //
-    //   st.equal(nl.isCorrectSync('npm'), true, 'should match affixes (1)');
-    //   st.equal(nl.isCorrectSync('NPM'), false, 'should match affixes (2)');
-    //   st.equal(nl.isCorrectSync('Npm'), false, 'should match affixes (3)');
+    //   st.equal(nl.spellSync('npm'), true, 'should match affixes (1)');
+    //   st.equal(nl.spellSync('NPM'), false, 'should match affixes (2)');
+    //   st.equal(nl.spellSync('Npm'), false, 'should match affixes (3)');
     //
-    //   nl.removeWordSync('npm');
+    //   nl.removeSync('npm');
     //
     //   st.end();
     // });
 
-    t.test('Hun#removeWord(value, callbakc)', function (st) {
+    t.test('Nodehun#remove(value, callbakc)', async function (st) {
       st.plan(4);
 
-      us.addWordSync('npm');
+      us.addSync('npm');
 
-      us.removeWord('npm', function (err, origWord) {
-        st.ifErr(err);
-        st.equal(origWord, 'npm', 'should pass the operated on word');
-        st.equal(
-          us.isCorrectSync('npm'),
-          false,
-          'should now mark as incorrect'
-        );
-        st.deepEqual(
-          us.spellSuggestionsSync('npm').slice(0, 3),
-          ['bpm', 'pm', 'rpm'],
-          'should now receive suggestions'
-        );
-      });
+      await us.remove('npm')
+      
+      st.equal(
+        us.spellSync('npm'),
+        false,
+        'should now mark as incorrect'
+      );
+      
+      st.deepEqual(
+        us.suggestSync('npm').slice(0, 3),
+        ['bpm', 'pm', 'rpm'],
+        'should now receive suggestions'
+      );
+
+      st.end();
     });
 
-    t.test('Hun#removeWordSync(value)', function (st) {
-      us.addWordSync('npm');
+    t.test('Nodehun#removeSync(value)', function (st) {
+      us.addSync('npm');
 
       st.equal(
-        us.removeWordSync('npm'),
+        us.removeSync('npm'),
         true,
         'should return whether successful'
       );
 
       st.equal(
-        us.isCorrectSync('npm'),
+        us.spellSync('npm'),
         false,
         'should now mark as incorrect'
       );
 
       st.deepEqual(
-        us.spellSuggestionsSync('npm').slice(0, 3),
+        us.suggestSync('npm').slice(0, 3),
         ['bpm', 'pm', 'rpm'],
         'should now receive suggestions'
       );
