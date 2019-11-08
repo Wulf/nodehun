@@ -121,10 +121,10 @@ describe('Nodehun#spellSync(word)', () => {
     let nodehunNL = new Nodehun(nl.affix, nl.dictionary)
 
     async function test() {
-        let ttt = 10000
+        let ttt = 1000
         let tt = 0
         for (let i = 0; i < ttt; i++) {
-            const t = await nodehunNL.spell('eierlevendbarend')
+            const t = await nodehun.spell('eierlevendbarend')
             if(t) tt++
         }
         if (tt > 0) console.log('>>> ', tt, '/', ttt)
