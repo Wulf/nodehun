@@ -5,10 +5,8 @@ os:
 
 node_js:
   - "node" # latest
-  - "9"
-  - "8"
-  - "7"
-  - "6"
+  - "12"
+  - "11"
 
 addons:
   # addons required for compiling native node modules

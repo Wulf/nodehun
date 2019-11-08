@@ -6,6 +6,21 @@ Introduction
 ------------
 Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module.
 
+TODO
+----
+
+- [ ] Update old examples, add an `examples` directory
+- [ ] Update README.md
+- [ ] Add a Typescript types declaration file
+
+Building (v3)
+-------------
+
+In case `python` is python 3 on your machine:
+```
+npm config set python python2.7
+```
+
 Warning on Versions
 -------------------
 The method signatures of version 0.XX.XX differs from the current versions. The first argument in these versions was a success parameter, when really an error should be null or passed if something went wrong. Here is an example of how they would differ:
@@ -30,6 +45,12 @@ Installation
 
 	npm install nodehun
 
+# Building
+
+In case `python` is python 3 on your machine:
+```
+npm config set python python2.7
+```
 
 Spell Suggest and Initialization
 --------------------------------

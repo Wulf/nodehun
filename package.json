@@ -1,6 +1,6 @@
 {
   "name": "nodehun",
-  "version": "2.0.12",
+  "version": "3.0.0",
   "description": "The Hunspell binding for nodejs that exposes as much of hunspell as possible and also adds new features. Hunspell is a first class spellcheck library used by Google, Apple, and Mozilla.",
   "license": "MIT",
   "keywords": [
@@ -12,8 +12,8 @@
     "spell checker",
     "check"
   ],
-  "repository": "https://github.com/nathanjsweet/nodehun",
-  "bugs": "https://github.com/nathanjsweet/nodehun/issues",
+  "repository": "https://github.com/Wulf/nodehun",
+  "bugs": "https://github.com/Wulf/nodehun/issues",
   "author": "Nathan Sweet <nathanjsweet@gmail.com>",
   "contributors": [
     "Nathan Sweet <nathanjsweet@gmail.com>",
@@ -23,14 +23,31 @@
     "Thomas Beverley <tom.beverley101@gmail.com>"
   ],
   "main": "build/Release/nodehun",
-  "dependencies": {},
+  "types": "src/Nodehun.d.ts",
+  "gypfile": true,
+  "dependencies": {
+    "@types/mocha": "^5.2.7",
+    "node-addon-api": "*"
+  },
   "devDependencies": {
+    "@types/node": "^12.12.6",
+    "bindings": "~1.2.1",
     "dictionary-en-gb": "^1.0.2",
     "dictionary-en-us": "^1.0.2",
     "dictionary-nl": "^1.0.2",
-    "tape": "^4.6.0"
+    "mocha": "^6.2.2",
+    "nodemon": "^1.19.4",
+    "tape": "^4.6.0",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.7.2"
   },
   "scripts": {
-    "test": "node test"
+    "start": "nodemon -e ts,js,cc,h,gyp -x \"npm run build && npm run test-napi\"",
+    "start-test": "nodemon -e ts,js -x \"npm run test-napi\"",
+    "dev": "npm start",
+    "build": "node-gyp rebuild -j 8",
+    "test-napi": "ts-node --transpile-only node_modules/mocha/bin/mocha ./test/*/**.spec.ts",
+    "test-napi-original": "node ./test/n-api/index.js",
+    "test": "ts-node node_modules/tape/bin/tape ./test/index.js"
   }
 }
