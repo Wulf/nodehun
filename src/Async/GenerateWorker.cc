@@ -10,14 +10,18 @@ class GenerateWorker : public Worker {
         GenerateWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word,
-            const char* example)
+            std::string word,
+            std::string example)
         : Worker(context, d), word(word), example(example) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        length = context->instance->generate(&generates, word, example);
+        length = context->instance->generate(
+            &generates,
+            word.c_str(),
+            example.c_str()
+        );
         context->unlock();
     }
 
@@ -26,15 +30,16 @@ class GenerateWorker : public Worker {
         
         Napi::Array array = Napi::Array::New(env, length);
         for (int i = 0; i < length; i++) {
-            array.Set(i, Napi::String::New(env, *(generates+i)));
+            array.Set(i, Napi::String::New(env, generates[i]));
         }
+        context->instance->free_list(&generates, length);
 
         deferred.Resolve(array);
     }
 
     private:
         int length = 0;
-        char** generates;
-        const char* word;
-        const char* example;
+        char** generates = NULL;
+        std::string word;
+        std::string example;
 };

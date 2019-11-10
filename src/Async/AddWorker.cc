@@ -10,13 +10,13 @@ class AddWorker : public Worker {
         AddWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        context->instance->add(word);
+        context->instance->add(word.c_str());
         context->unlock();
     }
 
@@ -27,5 +27,5 @@ class AddWorker : public Worker {
     }
 
     private:
-        const char* word;
+        std::string word;
 };

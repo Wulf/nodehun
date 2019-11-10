@@ -10,14 +10,14 @@ class AddWithAffixWorker : public Worker {
         AddWithAffixWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word,
-            const char* example)
+            std::string word,
+            std::string example)
         : Worker(context, d), word(word), example(example) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        context->instance->add_with_affix(word, example);
+        context->instance->add_with_affix(word.c_str(), example.c_str());
         context->unlock();
     }
 
@@ -28,6 +28,6 @@ class AddWithAffixWorker : public Worker {
     }
 
     private:
-        const char* word;
-        const char* example;
+        std::string word;
+        std::string example;
 };

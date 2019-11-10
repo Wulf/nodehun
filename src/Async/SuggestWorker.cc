@@ -1,7 +1,5 @@
 #include <napi.h>
-
-#include <chrono>
-#include <thread>
+// TODO: remove all the chrono/thread imports
 #include <hunspell.hxx>
 #include "Worker.cc"
 
@@ -10,29 +8,39 @@ class SuggestWorker : public Worker {
         SuggestWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        length = this->context->instance->suggest(&suggestions, word);
+        bool correct = context->instance->spell(word.c_str());
+        if (!correct) {
+            length = this->context->instance->suggest(&suggestions, word.c_str());
+        }
         context->unlock();
     }
 
     void Resolve(Napi::Promise::Deferred const &deferred) {
         Napi::Env env = deferred.Env();
 
-        Napi::Array array = Napi::Array::New(env, length);
-        for (int i = 0; i < length; i++) {
-            array.Set(i, Napi::String::New(env, *(suggestions+i)));
+        if (length == -1) {
+            deferred.Resolve(env.Null());
+            return;
         }
 
-        deferred.Resolve(Napi::Boolean::New(env, array));
+        Napi::Array array = Napi::Array::New(env, length);
+        for (int i = 0; i < length; i++) {
+            array.Set(i, Napi::String::New(env, suggestions[i]));
+        }
+
+        context->instance->free_list(&suggestions, length);
+
+        deferred.Resolve(array);
     }
 
     private:
-        int length = 0;
-        const char* word;
-        char** suggestions;
+        int length = -1;
+        std::string word;
+        char** suggestions = NULL;
 };
