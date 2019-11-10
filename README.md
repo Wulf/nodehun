@@ -12,7 +12,9 @@ TODO
 - [ ] Address "// TODO" comments throughout the project
 - [ ] Update old examples, add an `examples` directory
 - [ ] Update README.md
-- [ ] Add a Typescript types declaration file
+- [ ] Test TypeScript declaration file
+- [ ] CHANGELOG or similar in readme
+- [ ] Performance tests, stress testing against older version
 
 Building (v3)
 -------------
