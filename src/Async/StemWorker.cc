@@ -10,13 +10,13 @@ class StemWorker : public Worker {
         StemWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        length = this->context->instance->stem(&stems, word);
+        length = this->context->instance->stem(&stems, word.c_str());
         context->unlock();
     }
 
@@ -25,14 +25,16 @@ class StemWorker : public Worker {
         
         Napi::Array array = Napi::Array::New(env, length);
         for (int i = 0; i < length; i++) {
-            array.Set(i, Napi::String::New(env, *(stems+i)));
+            array.Set(i, Napi::String::New(env, stems[i]));
         }
+        
+        context->instance->free_list(&stems, length);
 
         deferred.Resolve(array);
     }
 
     private:
         int length = 0;
-        const char* word;
-        char** stems;
+        std::string word;
+        char** stems = NULL;
 };

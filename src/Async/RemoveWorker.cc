@@ -10,13 +10,13 @@ class RemoveWorker : public Worker {
         RemoveWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        context->instance->remove(word);
+        context->instance->remove(word.c_str());
         context->unlock();
     }
 
@@ -27,5 +27,5 @@ class RemoveWorker : public Worker {
     }
 
     private:
-        const char* word;
+        std::string word;
 };

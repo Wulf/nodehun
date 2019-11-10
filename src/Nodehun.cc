@@ -153,7 +153,7 @@ Napi::Value Nodehun::spell(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     SpellWorker* worker = new SpellWorker(
       context,
@@ -169,6 +169,7 @@ Napi::Value Nodehun::spell(const Napi::CallbackInfo& info) {
 
 Napi::Value Nodehun::spellSync(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
   if (info.Length() != 1) {
     Napi::Error error = Napi::Error::New(env, INVALID_NUMBER_OF_ARGUMENTS);
@@ -179,9 +180,9 @@ Napi::Value Nodehun::spellSync(const Napi::CallbackInfo& info) {
     error.ThrowAsJavaScriptException();
     return error.Value();
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    
-    bool correct = context->instance->spell(word);
+    std::string word = info[0].ToString().Utf8Value();
+
+    bool correct = context->instance->spell(word.c_str());
     
     return Napi::Boolean::New(env, correct);
   }
@@ -199,7 +200,7 @@ Napi::Value Nodehun::suggest(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     SuggestWorker* worker = new SuggestWorker(
       context,
@@ -225,13 +226,26 @@ Napi::Value Nodehun::suggestSync(const Napi::CallbackInfo& info) {
     error.ThrowAsJavaScriptException();
     return error.Value();
   } else {
-    char** suggestions;
-    int length = this->context->instance->suggest(&suggestions, info[0].ToString().Utf8Value().c_str());
+    std::string word = info[0].ToString().Utf8Value();
+
+    // TODO: add lock/unlock to sync operations
+    // TODO: release suggestion lists
+
+    bool isCorrect = this->context->instance->spell(word.c_str());
+    
+    if (isCorrect) {
+      return env.Null();
+    }
+    
+    char** suggestions = NULL;
+    int length = this->context->instance->suggest(&suggestions, word.c_str());
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
-      array.Set(i, Napi::String::New(env, *(suggestions+i)));
+      array.Set(i, Napi::String::New(env, suggestions[i]));
     }
+
+    this->context->instance->free_list(&suggestions, length);
 
     return array;
   }
@@ -249,7 +263,7 @@ Napi::Value Nodehun::analyze(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     AnalyzeWorker* worker = new AnalyzeWorker(
       context,
@@ -275,13 +289,18 @@ Napi::Value Nodehun::analyzeSync(const Napi::CallbackInfo& info) {
     error.ThrowAsJavaScriptException();
     return error.Value();
   } else {
-    char** analysis;
-    int length = this->context->instance->analyze(&analysis, info[0].ToString().Utf8Value().c_str());
+    std::string word = info[0].ToString().Utf8Value();
+
+    char** analysis = NULL;
+    this->context->lock();
+    int length = this->context->instance->analyze(&analysis, word.c_str());
+    this->context->unlock();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
-      array.Set(i, Napi::String::New(env, *(analysis+i)));
+      array.Set(i, Napi::String::New(env, analysis[i]));
     }
+    context->instance->free_list(&analysis, length);
 
     return array;
   }
@@ -299,7 +318,7 @@ Napi::Value Nodehun::stem(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     StemWorker* worker = new StemWorker(
       context,
@@ -325,13 +344,18 @@ Napi::Value Nodehun::stemSync(const Napi::CallbackInfo& info) {
     error.ThrowAsJavaScriptException();
     return error.Value();
   } else {
-    char** stems;
-    int length = this->context->instance->stem(&stems, info[0].ToString().Utf8Value().c_str());
+    std::string word = info[0].ToString().Utf8Value();
+
+    char** stems = NULL;
+    context->lock();
+    int length = this->context->instance->stem(&stems, word.c_str());
+    context->unlock();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
-      array.Set(i, Napi::String::New(env, *(stems+i)));
+      array.Set(i, Napi::String::New(env, stems[i]));
     }
+    context->instance->free_list(&stems, length);
 
     return array;
   }
@@ -352,8 +376,8 @@ Napi::Value Nodehun::generate(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_SECOND_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    const char* example = info[1].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
+    std::string example = info[1].ToString().Utf8Value();
 
     GenerateWorker* worker = new GenerateWorker(
       context,
@@ -384,16 +408,23 @@ Napi::Value Nodehun::generateSync(const Napi::CallbackInfo& info) {
     error.ThrowAsJavaScriptException();
     return error.Value();
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    const char* example = info[1].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
+    std::string example = info[1].ToString().Utf8Value();
 
-    char** generates;
-    int length = this->context->instance->generate(&generates, word, example);
+    char** generates = NULL;
+    context->lock();
+    int length = this->context->instance->generate(
+      &generates,
+      word.c_str(),
+      example.c_str()
+    );
+    context->unlock();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
-      array.Set(i, Napi::String::New(env, *(generates+i)));
+      array.Set(i, Napi::String::New(env, generates[i]));
     }
+    context->instance->free_list(&generates, length);
 
     return array;
   }
@@ -413,8 +444,11 @@ Napi::Value Nodehun::addSync(const Napi::CallbackInfo& info) {
     
     return error.Value();
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    context->instance->add(word);
+    std::string word = info[0].ToString().Utf8Value();
+
+    context->lock();
+    context->instance->add(word.c_str());
+    context->unlock();
     
     return env.Undefined();
   }
@@ -433,7 +467,7 @@ Napi::Value Nodehun::add(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     AddWorker* worker = new AddWorker(
       context,
@@ -466,9 +500,12 @@ Napi::Value Nodehun::addWithAffixSync(const Napi::CallbackInfo& info) {
 
     return error.Value();
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    const char* example = info[1].ToString().Utf8Value().c_str();
-    context->instance->add_with_affix(word, example);
+    std::string word = info[0].ToString().Utf8Value();
+    std::string example = info[1].ToString().Utf8Value();
+
+    context->lock();
+    context->instance->add_with_affix(word.c_str(), example.c_str());
+    context->unlock();
     
     return env.Undefined();
   }
@@ -490,8 +527,8 @@ Napi::Value Nodehun::addWithAffix(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_SECOND_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    const char* example = info[1].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
+    std::string example = info[1].ToString().Utf8Value();
 
     AddWithAffixWorker* worker = new AddWithAffixWorker(
       context,
@@ -520,8 +557,11 @@ Napi::Value Nodehun::removeSync(const Napi::CallbackInfo& info) {
     
     return error.Value();
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
-    context->instance->remove(word);
+    std::string word = info[0].ToString().Utf8Value();
+
+    context->lock();
+    context->instance->remove(word.c_str());
+    context->unlock();
     
     return env.Undefined();
   }
@@ -540,7 +580,7 @@ Napi::Value Nodehun::remove(const Napi::CallbackInfo& info) {
     Napi::Error error = Napi::Error::New(env, INVALID_FIRST_ARGUMENT);
     deferred.Reject(error.Value());
   } else {
-    const char* word = info[0].ToString().Utf8Value().c_str();
+    std::string word = info[0].ToString().Utf8Value();
 
     RemoveWorker* worker = new RemoveWorker(
       context,
@@ -563,7 +603,7 @@ Napi::Value Nodehun::getDictionaryEncoding(const Napi::CallbackInfo& info) {
     return error.Value();
   }
 
-  char * encoding = this->context->instance->get_dic_encoding();
+  char* encoding = this->context->instance->get_dic_encoding();
   
   if (encoding == NULL) {
     return env.Undefined();
@@ -608,7 +648,6 @@ Napi::Value Nodehun::getWordCharactersUTF16(const Napi::CallbackInfo& info) {
   } else {
     return Napi::String::New(env, ((char16_t*) chars));
   }
-
 }
 
 Napi::Value Nodehun::getVersion(const Napi::CallbackInfo& info) {

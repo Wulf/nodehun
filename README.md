@@ -9,6 +9,7 @@ Nodehun aims to expose as much of hunspell's functionality as possible in an eas
 TODO
 ----
 
+- [ ] Address "// TODO" comments throughout the project
 - [ ] Update old examples, add an `examples` directory
 - [ ] Update README.md
 - [ ] Add a Typescript types declaration file

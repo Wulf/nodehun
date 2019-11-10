@@ -14,7 +14,7 @@ declare interface Nodehun {
   stemSync(word: string): string[];
   
   generate(word: string, example: string): Promise<string[]>;
-  generateSync(word: string): string[];
+  generateSync(word: string, example: string): string[];
 
   addDictionary(dictionary: Buffer): Promise<void>;
   addDictionarySync(dictionary: Buffer): void;

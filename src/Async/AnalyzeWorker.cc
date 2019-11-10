@@ -10,13 +10,13 @@ class AnalyzeWorker : public Worker {
         AnalyzeWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        length = this->context->instance->analyze(&analysis, word);
+        length = this->context->instance->analyze(&analysis, word.c_str());
         context->unlock();
     }
 
@@ -25,14 +25,16 @@ class AnalyzeWorker : public Worker {
         
         Napi::Array array = Napi::Array::New(env, length);
         for (int i = 0; i < length; i++) {
-            array.Set(i, Napi::String::New(env, *(analysis+i)));
+            array.Set(i, Napi::String::New(env, analysis[i]));
         }
+
+        context->instance->free_list(&analysis, length);
 
         deferred.Resolve(array);
     }
 
     private:
         int length = 0;
-        const char* word;
-        char** analysis;
+        std::string word;
+        char** analysis = NULL;
 };

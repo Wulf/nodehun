@@ -10,13 +10,13 @@ class SpellWorker : public Worker {
         SpellWorker(
             HunspellContext* context,
             Napi::Promise::Deferred d,
-            const char* word)
+            std::string word)
         : Worker(context, d), word(word) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
         context->lock();
-        correct = context->instance->spell(word);
+        correct = context->instance->spell(word.c_str());
         context->unlock();
     }
 
@@ -28,5 +28,5 @@ class SpellWorker : public Worker {
 
     private:
         bool correct = false;
-        const char* word;
+        std::string word;
 };
