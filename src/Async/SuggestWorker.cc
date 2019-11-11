@@ -1,5 +1,4 @@
 #include <napi.h>
-// TODO: remove all the chrono/thread imports
 #include <hunspell.hxx>
 #include "Worker.cc"
 
@@ -13,12 +12,12 @@ class SuggestWorker : public Worker {
 
     void Execute() {
         // Worker thread; don't use N-API here
-        context->lock();
+        context->lockRead();
         bool correct = context->instance->spell(word.c_str());
         if (!correct) {
             length = this->context->instance->suggest(&suggestions, word.c_str());
         }
-        context->unlock();
+        context->unlockRead();
     }
 
     void Resolve(Napi::Promise::Deferred const &deferred) {

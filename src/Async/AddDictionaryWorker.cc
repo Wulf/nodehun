@@ -1,7 +1,4 @@
 #include <napi.h>
-
-#include <chrono>
-#include <thread>
 #include <hunspell.hxx>
 #include "Worker.cc"
 
@@ -15,9 +12,9 @@ class AddDictionaryWorker : public Worker {
 
     void Execute() {
         // Worker thread; don't use N-API here
-        context->lock();
+        context->lockWrite();
         context->instance->add_dic(dictionary);
-        context->unlock();
+        context->unlockWrite();
     }
 
     void Resolve(Napi::Promise::Deferred const &deferred) {

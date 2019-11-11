@@ -9,12 +9,22 @@ Nodehun aims to expose as much of hunspell's functionality as possible in an eas
 TODO
 ----
 
+- [ ] Where to get dictionaries
 - [ ] Address "// TODO" comments throughout the project
 - [ ] Update old examples, add an `examples` directory
 - [ ] Update README.md
-- [ ] Test TypeScript declaration file
 - [ ] CHANGELOG or similar in readme
 - [ ] Performance tests, stress testing against older version
+- [ ]   // TODO: create an issue
+		    // it(`should not throw when suggesting[Sync] for emojis ☀`, () => {
+- [ ]   // TODO: Mention in v2->v3 changelog that suggestions for
+        // correctly spelled words return null instead of an
+        // empty array.
+        //
+        // deepEqual(
+        //     nodehun3.suggestSync('color'),
+        //     nodehun2.spellSuggestionsSync('color')
+        // )
 
 Building (v3)
 -------------

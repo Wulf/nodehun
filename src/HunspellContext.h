@@ -15,12 +15,20 @@ class HunspellContext {
       delete instance;
   }
 
-  void lock() {
-    asyncLock.lock();
+  void lockRead() {
+    readLock.lock();
   }
 
-  void unlock() {
-    asyncLock.unlock();
+  void unlockRead() {
+    readLock.unlock();
+  }
+
+  void lockWrite() {
+    writeLock.lock();
+  }
+
+  void unlockWrite() {
+    writeLock.unlock();
   }
 
  private:
@@ -28,7 +36,8 @@ class HunspellContext {
    * The Hunspell instance is not thread safe, so we use a mutex
    * to manage asynchronous usage.
    */
-  std::mutex asyncLock;
+  std::mutex writeLock;
+  std::mutex readLock;
 };
 
 #endif

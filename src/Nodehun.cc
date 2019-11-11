@@ -182,7 +182,9 @@ Napi::Value Nodehun::spellSync(const Napi::CallbackInfo& info) {
   } else {
     std::string word = info[0].ToString().Utf8Value();
 
+    context->lockRead();
     bool correct = context->instance->spell(word.c_str());
+    context->unlockRead();
     
     return Napi::Boolean::New(env, correct);
   }
@@ -228,17 +230,17 @@ Napi::Value Nodehun::suggestSync(const Napi::CallbackInfo& info) {
   } else {
     std::string word = info[0].ToString().Utf8Value();
 
-    // TODO: add lock/unlock to sync operations
-    // TODO: release suggestion lists
-
+    context->lockRead();
     bool isCorrect = this->context->instance->spell(word.c_str());
     
     if (isCorrect) {
+      context->unlockRead();
       return env.Null();
     }
     
     char** suggestions = NULL;
     int length = this->context->instance->suggest(&suggestions, word.c_str());
+    context->unlockRead();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
@@ -292,14 +294,15 @@ Napi::Value Nodehun::analyzeSync(const Napi::CallbackInfo& info) {
     std::string word = info[0].ToString().Utf8Value();
 
     char** analysis = NULL;
-    this->context->lock();
+    this->context->lockRead();
     int length = this->context->instance->analyze(&analysis, word.c_str());
-    this->context->unlock();
+    this->context->unlockRead();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
       array.Set(i, Napi::String::New(env, analysis[i]));
     }
+
     context->instance->free_list(&analysis, length);
 
     return array;
@@ -347,14 +350,15 @@ Napi::Value Nodehun::stemSync(const Napi::CallbackInfo& info) {
     std::string word = info[0].ToString().Utf8Value();
 
     char** stems = NULL;
-    context->lock();
+    context->lockRead();
     int length = this->context->instance->stem(&stems, word.c_str());
-    context->unlock();
+    context->unlockRead();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
       array.Set(i, Napi::String::New(env, stems[i]));
     }
+
     context->instance->free_list(&stems, length);
 
     return array;
@@ -412,18 +416,19 @@ Napi::Value Nodehun::generateSync(const Napi::CallbackInfo& info) {
     std::string example = info[1].ToString().Utf8Value();
 
     char** generates = NULL;
-    context->lock();
+    context->lockRead();
     int length = this->context->instance->generate(
       &generates,
       word.c_str(),
       example.c_str()
     );
-    context->unlock();
+    context->unlockRead();
     
     Napi::Array array = Napi::Array::New(env, length);
     for (int i = 0; i < length; i++) {
       array.Set(i, Napi::String::New(env, generates[i]));
     }
+    
     context->instance->free_list(&generates, length);
 
     return array;
@@ -446,9 +451,9 @@ Napi::Value Nodehun::addSync(const Napi::CallbackInfo& info) {
   } else {
     std::string word = info[0].ToString().Utf8Value();
 
-    context->lock();
+    context->lockWrite();
     context->instance->add(word.c_str());
-    context->unlock();
+    context->unlockWrite();
     
     return env.Undefined();
   }
@@ -503,9 +508,9 @@ Napi::Value Nodehun::addWithAffixSync(const Napi::CallbackInfo& info) {
     std::string word = info[0].ToString().Utf8Value();
     std::string example = info[1].ToString().Utf8Value();
 
-    context->lock();
+    context->lockWrite();
     context->instance->add_with_affix(word.c_str(), example.c_str());
-    context->unlock();
+    context->unlockWrite();
     
     return env.Undefined();
   }
@@ -559,9 +564,9 @@ Napi::Value Nodehun::removeSync(const Napi::CallbackInfo& info) {
   } else {
     std::string word = info[0].ToString().Utf8Value();
 
-    context->lock();
+    context->lockWrite();
     context->instance->remove(word.c_str());
-    context->unlock();
+    context->unlockWrite();
     
     return env.Undefined();
   }
