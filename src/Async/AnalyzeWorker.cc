@@ -1,7 +1,4 @@
 #include <napi.h>
-
-#include <chrono>
-#include <thread>
 #include <hunspell.hxx>
 #include "Worker.cc"
 
@@ -15,9 +12,9 @@ class AnalyzeWorker : public Worker {
 
     void Execute() {
         // Worker thread; don't use N-API here
-        context->lock();
+        context->lockRead();
         length = this->context->instance->analyze(&analysis, word.c_str());
-        context->unlock();
+        context->unlockRead();
     }
 
     void Resolve(Napi::Promise::Deferred const &deferred) {

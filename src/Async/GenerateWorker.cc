@@ -1,7 +1,4 @@
 #include <napi.h>
-
-#include <chrono>
-#include <thread>
 #include <hunspell.hxx>
 #include "Worker.cc"
 
@@ -16,13 +13,13 @@ class GenerateWorker : public Worker {
 
     void Execute() {
         // Worker thread; don't use N-API here
-        context->lock();
+        context->lockRead();
         length = context->instance->generate(
             &generates,
             word.c_str(),
             example.c_str()
         );
-        context->unlock();
+        context->unlockRead();
     }
 
     void Resolve(Napi::Promise::Deferred const &deferred) {
@@ -32,6 +29,7 @@ class GenerateWorker : public Worker {
         for (int i = 0; i < length; i++) {
             array.Set(i, Napi::String::New(env, generates[i]));
         }
+        
         context->instance->free_list(&generates, length);
 
         deferred.Resolve(array);
