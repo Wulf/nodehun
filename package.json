@@ -26,21 +26,14 @@
   "types": "src/Nodehun.d.ts",
   "gypfile": true,
   "dependencies": {
-    "@types/mocha": "^5.2.7",
     "node-addon-api": "*"
   },
   "devDependencies": {
+    "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.6",
     "bindings": "~1.2.1",
-    "chart.js": "^2.9.2",
-    "chartjs-node": "^1.7.1",
-    "dictionary-en-gb": "^1.0.2",
-    "dictionary-en-us": "^1.0.2",
-    "dictionary-nl": "^1.0.2",
     "mocha": "^6.2.2",
-    "nodehun": "^2.0.12",
     "nodemon": "^1.19.4",
-    "tape": "^4.6.0",
     "ts-node": "^8.4.1",
     "typescript": "^3.7.2"
   },
@@ -49,6 +42,6 @@
     "start-test": "nodemon -e ts,js -x \"npm run test\"",
     "build": "node-gyp rebuild -j 8",
     "test": "ts-node --transpile-only node_modules/mocha/bin/mocha ./test/*.spec.ts",
-    "performance-test": "ts-node test/performance/performance.ts"
+    "performance-test": "echo \"This command only works with node version 11 or lower!\" && npm i chart.js@2.9.2 chartjs-node@1.7.1 nodehun@2.0.12 && ts-node test/performance/performance.ts"
   }
 }
