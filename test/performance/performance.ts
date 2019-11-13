@@ -1,10 +1,12 @@
+import Nodehun from 'nodehun'
+
 const fs = require('fs')
 const path = require('path')
 // @ts-ignore
 const { performance } = require('perf_hooks')
 const ChartjsNode = require('chartjs-node');
 
-const Nodehun3 = require('bindings')('Nodehun')
+const Nodehun3: typeof Nodehun = require('bindings')('Nodehun')
 const Nodehun2 = require('nodehun')
 
 /////////////////////////////////////////////////////
