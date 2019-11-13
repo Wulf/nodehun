@@ -69,7 +69,10 @@ Nodehun::Nodehun(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Nodehun>(inf
 };
 
 Nodehun::~Nodehun() {
-  delete this->context;
+  if (context) {
+    delete context;
+    context = NULL;
+  }
 }
 
 Napi::Object Nodehun::NewInstance(const Napi::CallbackInfo& info) {
