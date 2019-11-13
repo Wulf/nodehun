@@ -22,7 +22,7 @@
     "Espen Hovlandsdal <espen@hovlandsdal.com>",
     "Thomas Beverley <tom.beverley101@gmail.com>"
   ],
-  "main": "build/Release/nodehun",
+  "main": "build/Release/Nodehun",
   "types": "src/Nodehun.d.ts",
   "gypfile": true,
   "dependencies": {
