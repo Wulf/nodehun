@@ -1,90 +1,85 @@
 Nodehun
 =======
-[![Build Status](https://travis-ci.org/Wulf/nodehun.svg?branch=master)](https://travis-ci.org/Wulf/nodehun) [![Build status](https://ci.appveyor.com/api/projects/status/9ky5lws4d191qrui/branch/master?svg=true)](https://ci.appveyor.com/project/Wulf/nodehun/branch/master)
+[![npm version](https://badge.fury.io/js/nodehun.svg)](https://badge.fury.io/js/nodehun) [![Build Status](https://travis-ci.org/Wulf/nodehun.svg?branch=master)](https://travis-ci.org/Wulf/nodehun) [![Build status](https://ci.appveyor.com/api/projects/status/9ky5lws4d191qrui/branch/master?svg=true)](https://ci.appveyor.com/project/Wulf/nodehun/branch/master)
 
 Introduction
 ------------
-Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module.
+Nodehun aims to expose as much of hunspell's functionality as possible in an easy to understand and maintainable way, while also maintaining the performance characteristics expected of a responsible node module. 
 
-TODO
-----
+Features
+--------
 
-- [ ] Where to get dictionaries
-- [ ] Address "// TODO" comments throughout the project
-- [ ] Update old examples, add an `examples` directory
-- [ ] Update README.md
-- [ ] CHANGELOG or similar in readme
-- [ ] Performance tests, stress testing against older version
-- [ ]   // TODO: create an issue
-		    // it(`should not throw when suggesting[Sync] for emojis ☀`, () => {
-- [ ]   // TODO: Mention in v2->v3 changelog that suggestions for
-        // correctly spelled words return null instead of an
-        // empty array.
-        //
-        // deepEqual(
-        //     nodehun3.suggestSync('color'),
-        //     nodehun2.spellSuggestionsSync('color')
-        // )
+* Native performance.
+* Exposes all of hunspell's functionality.
+	* Spell checking, suggestions,
+	* stems/roots of words,
+	* morphological generation, and,
+	* word analysis.
+* TypeScript declaration file.
+* Synchronous + promise-based async API.
+* Extensive unit testing.
+* Completely re-written using N-API (thus, stability in future v8 versions)
 
-Building (v3)
--------------
+Known Bugs
+----------
 
-In case `python` is python 3 on your machine:
-```
-npm config set python python2.7
-```
+1. Requesting suggestions for emojis is broken
 
-Warning on Versions
--------------------
-The method signatures of version 0.XX.XX differs from the current versions. The first argument in these versions was a success parameter, when really an error should be null or passed if something went wrong. Here is an example of how they would differ:
+Important migration notes from v2 -> v3
+---------------------------------------
 
-```js
-//0.XX.XX version:
-dict.addWord('foo',function(success, word){
-   console.log(success, word);
-   // if the method succeeded then
-   // the output will be : true, 'foo'
-n});
-//1.XX.XX/2.XX.XX version:
-dict.addWord('xxxxxxx', function(err, word){
-   console.log(err);
-   // if the method succeeded then
-   // the output will be: null, 'foo'
-});
-```
+1. The API now reflects hunspell's API almost exactly. Please see `src/Nodehun.d.ts` for the API exposed by v3.
+
+2. Unlike Nodehun2, `suggestSync` for a word spelled correctly returns `null` instead of an empty array.
+	 For example:
+
+	```js
+	nodehun2.spellSuggestionsSync('color') // => []
+	nodehun3.suggestSync('color') // => null
+	```
+
+3. There are performance gains to be seen for those who wrapped the library in promises:
+
+![Spelling performance comparison graph](./test/performance/spell.png "Spelling performance comparison graph")
+![Suggestions performance comparison graph](./test/performance/suggest.png "Suggestions performance comparison graph")
+
+To run the tests on your machine, execute `npm run performance-test` and find the graphs in the `test/performance` folder.
 
 Installation
 ------------
 
 	npm install nodehun
 
-# Building
+Or if you're looking for the old version:
 
-In case `python` is python 3 on your machine:
-```
-npm config set python python2.7
-```
+	npm install node@2.0.12
 
-Spell Suggest and Initialization
---------------------------------
-Initializing nodehun is very easy, simply add the buffer of an affix and dictionary file as the first two arguments of the constructor. The mechanics of the dictionaries nodehun processes is fairly simple to understand. Nodehun ships with US english and Canadian English (look in the examples folder), but tons of languages are available for free at [open office](http://extensions.services.openoffice.org/dictionary), see the readme file in the dictionaries folder for more directions. Of course you don't need to use the filesystem you could use a distributed data store to store the dictionaries. Please do not actually use `readFileSync`.
+Works with Node v11 or lower, but some have reported compilation issues in v10 and v11.
+If you plan to use this version, please refer to the [old](https://github.com/Wulf/nodehun/blob/77e4be9e2cde8805061387d4783357c45c582a04/readme.md) readme file.
+
+Quick Start
+-----------
+Initializing nodehun is very easy; simply add the buffer of an affix and dictionary file as the first two arguments of the constructor. The mechanics of the dictionaries nodehun processes is fairly simple to understand. Nodehun ships with US English and Canadian English (look in the examples folder), but tons of languages are available for free at [open office](http://extensions.services.openoffice.org/dictionary), see the section below on where you can find other dictionaries. Of course you don't need to use the filesystem -- you could use a distributed data store to store the dictionaries. Please do not actually use `readFileSync`.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-dict.spellSuggest('color',function(err, correct, suggestion, origWord){
-	console.log(err, correct, suggestion, origWord);
-	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, null, 'color'
-});
+const fs = require('fs')
+const Nodehun = require('nodehun')
+const affixBuffer = fs.readFileSync('path/to/*.aff')
+const dictionaryBuffer = fs.readFileSync('path/to/*.dic')
 
-dict.spellSuggest('calor',function(err, correct, suggestion, origWord){
-	console.log(err, correct, suggestion, origWord);
-	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: null, false, "carol", 'calor'
-});
+var nodehun = new nodehun(affixBuffer, dictionaryBuffer)
+
+// Promise example
+nodehun.suggest('color')
+		   .then(suggestions => { })
+
+// async/await example
+async function() {
+	const suggestions = await nodehun.suggest('colour')
+}
+
+// sync example
+const suggestions = nodehun.suggestSync('colour')
 ```
 
 Checking for Correctness
@@ -92,16 +87,8 @@ Checking for Correctness
 Nodehun offers a method that returns true or false if the passed word exists in the dictionary, i.e. is "correct".
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.isCorrect('color',function(err, correct, origWord){
-	console.log(err, correct, origWord);
-	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, "color"
-});
+await nodehun.spell('color') // => true
+await nodehun.spell('colour') // => false, assuming en_US dictionary
 ```
 
 Spell Suggestions
@@ -109,22 +96,11 @@ Spell Suggestions
 Nodehun also offers a method that returns an array of words that could possibly match a misspelled word, ordered by most likely to be correct.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
+await nodehun.suggest('color')
+// => null (since it's correctly spelled)
 
-dict.spellSuggestions('color',function(err, correct, suggestions, origWord){
-	console.log(err, correct, suggestions, origWord);
-	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, [], 'color'
-});
-
-dict.spellSuggestions('calor',function(err, correct, suggestions, origWord){
-	console.log(err, correct, suggestions, origWord);
-	// because "calor" is not a defined word in the US English dictionary
-	// the output will be: null, false, [ 'carol','valor','color','cal or','cal-or','caloric','calorie'], 'calor'
-});
+await nodehun.suggest('calor')
+// => ['carol','valor','color','cal or','cal-or','caloric','calorie']
 ```
 
 Add Dictionary
@@ -132,26 +108,13 @@ Add Dictionary
 Nodehun also can add another dictionary on top of an existing dictionary object at runtime (this means it is not permanent) in order to merge two dictionaries. Once again, please do not actually use `readFileSync`.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dictbuf2 = fs.readFileSync(somedirectory+'/en_CA.dic');
-var dict = new nodehun(affbuf,dictbuf);
+const en_CA = fs.readFileSync('./path/to/en_CA.dic');
 
-dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
-	console.log(err, correct, suggestion, origWord);
-	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: null, false, "color", 'colour'
-});
-
-dict.addDictionary(dictbuf2,function(err){
-	if(!err)
-		USDictionary.spellSuggest('colour',function(err, correct, suggestion, origWord){
-			console.log(err, correct, suggestion, origWord);
-			// because "colour" is a defined word in the Canadian English dictionary
-			// the output will be: null, true, null, 'colour'
-		});				
-});
+await nodehun.suggest('colour') // => [ ...suggestions... ]
+// because "colour" is not a defined word in the US English dictionary
+await nodehun.addDictionary(en_CA)
+await nodehun.suggest('colour') // => null
+// (since the word is considered correctly spelled now)
 ```
 
 Add Word
@@ -159,26 +122,11 @@ Add Word
 Nodehun can also add a single word to a dictionary at runtime (this means it is not permanent) in order to have a custom runtime dictionary. If you know anything about Hunspell you can also add flags to the word.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.spellSuggest('colour',function(err, correct, suggestion, origWord){
-	console.log(err, correct, suggestions, origWord);
-	// because "colour" is not a defined word in the US English dictionary
-	// the output will be: null, false, "color", 'colour'
-});
-
-dict.addWord('colour',function(err, word){
-	if(!err)
-		dict.spellSuggest('colour',function(err, correct, suggestions, origWord){
-			console.log(err, correct, suggestions, origWord);
-			// because "colour" has been added to the US dictionary object.
-			// the output will be: true, null, 'colour'
-		});
-
-});
+await nodehun.suggest('colour') // => [ ...suggestions...]
+// because "colour" is not a defined word in the US English dictionary
+await nodehun.add('colour')
+await nodehun.suggest('colour') // => null
+// (since the word is considered correctly spelled now)
 ```
 
 Remove Word
@@ -186,26 +134,9 @@ Remove Word
 Nodehun can also remove a single word from a dictionary at runtime (this means it is not permanent) in order to have a custom runtime dictionary. If you know anything about Hunspell this method will ignore flags and just strip words that match.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.spellSuggest('color',function(err, correct, suggestion, origWord){
-	console.log(err, correct, suggestion, origWord);
-	// because "color" is a defined word in the US English dictionary
-	// the output will be: null, true, null, 'color'
-	dict.removeWord('color',function(err, word){
-		if(!err)			
-			dict.spellSuggest('color',function(err, correct, suggestion, origWord){
-				console.log(err, correct, suggestion, origWord);
-				// because "color" has been removed from the US dictionary object.
-				// the output will be: null, false, "colors", 'color'
-				// note that plurals are considered separte words.
-			});
-
-	});
-});
+await nodehun.suggest('color') // => null (since the word is correctly spelled)
+await nodehun.remove('color')
+await nodehun.suggest('color') // => ['colon', 'dolor', ...etc ]
 ```
 
 Stem
@@ -213,15 +144,7 @@ Stem
 Nodehun exposes the Hunspell `stem` function which analyzes the roots of words. Consult the Hunspell documentation for further understanding.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.stem('telling',function(err, stems){
-	console.log(err, stems);
-	// the output will be: null, [telling, tell]
-});
+await nodehun.stem('telling') // => [telling, tell]
 ```
 
 Analyze
@@ -229,15 +152,9 @@ Analyze
 Nodehun exposes the Hunspell `analyze` function which analyzes a word and return a morphological analysis. Consult the Hunspell documentation for further understanding.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.analyze('telling',function(err, fields){
-	console.log(err, fields);
-	// with the provided dictionaries, the output will be: null [ ' st:telling ts:0', ' st:tell ts:0 al:told is:Vg' ]
-});
+await nodehun.analyze('telling') 
+// with the appropriate dictionaries files, it will return:
+// => [' st:telling ts:0', ' st:tell ts:0 al:told is:Vg']
 ```
 
 Generate
@@ -245,39 +162,8 @@ Generate
 Nodehun exposes the Hunspell `generate` function which generates a variation of a word by matching the morphological structure of another word. Consult the Hunspell documentation for further understanding.
 
 ```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-var dict = new nodehun(affbuf,dictbuf);
-
-dict.generate('telling', 'ran', function(err,res){
-    console.log(err, res);
-	// the output will be: null [ 'told' ]
-
-	dict.generate('told', 'run', function(err,res){
-		console.log(err, res);
-	// the output will be: null [ 'tell' ]
-	});
-});
-```
-
-Asynchronous Invocation
------------------------
-Initializing the nodehun object can be bumpy if you're doing it a lot. A large dictionary can take up to 100ms to initialize. This is obviously unacceptable in applications that need on-the-fly dictionary creation. Therefore there is a static method on the nodehun object that allows you to initialize the dictionary object asynchronously, like so:
-
-```js
-var nodehun = require('nodehun');
-var affbuf = fs.readFileSync(somedirectory+'/en_US.aff');
-var dictbuf = fs.readFileSync(somedirectory+'/en_US.dic');
-
-nodehun.createNewNodehun(affbuf,dictbuf,function(err,dict){
-	if(!err)
-		dict.spellSuggest('color',function(err, correct, suggestion){
-			console.log(err, correct, suggestion);
-			// because "color" is a defined word in the US English dictionary
-			// the output will be: null, true, null
-		});
-});
+await nodehun.generate('telling', 'ran') // => [ 'told' ]
+await nodehun.generate('told', 'run') // => [ 'tell' ]
 ```
 
 A Warning on Synchronous Methods
@@ -301,3 +187,55 @@ If you want to create a new Hunspell dictionary you will need a base affix file.
 	Aaron/M
 
 Notice that the "S" flag denotes a proper noun that isn't capitalized, otherwise look in the docs.
+
+Where To Get Dictionaries
+------------------------
+
+The included dictionaries were extracted from Libre Office. The Libre Office versions have a modified aff file that makes generate() and analyze() much more useful. However, any MySpell style dictionary will work. Here are a few sources:
+
+* [Libre Office dictionaries](http://cgit.freedesktop.org/libreoffice/dictionaries/tree/)
+* [Official Aspell dictionaries](http://wordlist.aspell.net/dicts/)
+* [Open Office extensions](http://extensions.services.openoffice.org/dictionary)
+* [Mozilla Extensions](https://addons.mozilla.org/en-us/firefox/language-tools/)
+
+Also, check out [@wooorm]()'s UTF-8 dictionary collection [here](https://github.com/wooorm/dictionaries).
+
+Let the community know if you've found other dictionary repositories!
+
+# Development and Contribution
+
+The following is a a list of commands and their descriptions which may
+help in development.
+
+`npm start`: to jumpstart the development server. This will automatically recompile the
+c++ source when changes are made and run the tests once more.
+
+`npm run start-test`: if you don't want to continuously compile the c++ source, but do want
+the tests to re-run when changes are made to the test files.
+
+`npm run build`: to compile the addon once.
+
+`npm test`: to run the tests once.
+
+`npm run performance-test`: to run the performance tests and output updated graphs. (see `test/performance`)
+
+## Notes
+
+1) In case `python` is python 3 on your machine:
+
+```
+npm config set python python2.7
+```
+
+2) Make `node-gyp` build faster by increasing the number of
+	 cores it uses:
+
+```bash
+export JOBS=max
+npm run build # super fast now!
+```
+
+Mentions
+--------
+
+Special thanks to [@nathanjsweet](https://github.com/nathanjsweet) for his grass roots efforts with this project, including the `hunspell-distributed` package upon which this library relies to provide buffer-based Hunspell initialization.
