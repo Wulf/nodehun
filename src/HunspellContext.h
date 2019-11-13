@@ -4,6 +4,7 @@
 #include <hunspell.hxx>
 #include <napi.h>
 #include <mutex>
+#include <shared_mutex>
 
 class HunspellContext {
  public:
@@ -12,23 +13,26 @@ class HunspellContext {
   HunspellContext(Hunspell* instance): instance(instance) {};
 
   ~HunspellContext() {
-      delete instance;
+      if (instance) {
+        delete instance;
+        instance = NULL;
+      }
   }
 
   void lockRead() {
-    readLock.lock();
+    rwLock.lock_shared();
   }
 
   void unlockRead() {
-    readLock.unlock();
+    rwLock.unlock_shared();
   }
 
   void lockWrite() {
-    writeLock.lock();
+    rwLock.lock();
   }
 
   void unlockWrite() {
-    writeLock.unlock();
+    rwLock.unlock();
   }
 
  private:
@@ -36,8 +40,7 @@ class HunspellContext {
    * The Hunspell instance is not thread safe, so we use a mutex
    * to manage asynchronous usage.
    */
-  std::mutex writeLock;
-  std::mutex readLock;
+  std::shared_mutex rwLock;
 };
 
 #endif
