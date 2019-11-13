@@ -11,17 +11,17 @@
       "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
       # set standard to C++ 17
       "cflags_cc": [
-        "-std=c++17"
+        "-std=c++1z"
       ],
       # and on MAC
       "xcode_settings": {
         "OTHER_CFLAGS": [
-          "-std=c++17"
+          "-std=c++1z"
         ]
       },
       "msvs_settings": {
         "VCCLCompilerTool": {
-          "AdditionalOptions": [ "-std:c++17", ],
+          "AdditionalOptions": [ "-std:c++1z", ],
         },
       },
     }
