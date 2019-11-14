@@ -20,10 +20,6 @@ const nl = {
     dictionary: fs.readFileSync(path.resolve(__dirname, './dictionaries/nl.dic'))
 }
 
-const Nodehun2 = require('nodehun')
-const nodehun2 = new Nodehun2(enUS.affix, enUS.dictionary)
-// const nodehun2NL = new Nodehun2(nl.affix, nl.dictionary)
-
 describe('Nodehun(affixBuffer, dictionaryBuffer)', () => {
     it(`should export a function`, () => {
         strictEqual(typeof Nodehun, 'function')
