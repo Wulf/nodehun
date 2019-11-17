@@ -24,7 +24,7 @@ Nodehun aims to expose as much of hunspell's functionality as possible in an eas
 
 	npm install nodehun
 
-If you run into any build errors, make sure you satisfy the requirements for [`node-gyp`](https://github.com/nodejs/node-gyp#installation). Further, please note that nodehun relies on the C++-17 standard, so make sure your compiler is up to date!
+If you run into any build errors, make sure you satisfy the requirements for [`node-gyp`](https://github.com/nodejs/node-gyp#installation).
 
 ## Quick Start
 
