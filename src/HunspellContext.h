@@ -5,34 +5,39 @@
 #include <napi.h>
 #include <mutex>
 #include <shared_mutex>
+#include <uv.h>
 
 class HunspellContext {
  public:
   Hunspell* instance;
  
-  HunspellContext(Hunspell* instance): instance(instance) {};
+  HunspellContext(Hunspell* instance): instance(instance) {
+    uv_rwlock_init(&rwLock);
+  };
 
   ~HunspellContext() {
       if (instance) {
         delete instance;
         instance = NULL;
       }
+
+      uv_rwlock_destroy(&rwLock);
   }
 
   void lockRead() {
-    rwLock.lock_shared();
+    uv_rwlock_rdlock(&rwLock);
   }
 
   void unlockRead() {
-    rwLock.unlock_shared();
+    uv_rwlock_rdunlock(&rwLock);
   }
 
   void lockWrite() {
-    rwLock.lock();
+    uv_rwlock_wrlock(&rwLock);
   }
 
   void unlockWrite() {
-    rwLock.unlock();
+    uv_rwlock_wrunlock(&rwLock);
   }
 
  private:
@@ -40,7 +45,7 @@ class HunspellContext {
    * The Hunspell instance is not thread safe, so we use a mutex
    * to manage asynchronous usage.
    */
-  std::shared_mutex rwLock;
+  uv_rwlock_t rwLock;
 };
 
 #endif
