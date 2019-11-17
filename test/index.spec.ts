@@ -366,31 +366,27 @@ describe('Nodehun#suggestSync(word)', () => {
     });
 
     it(`should suggest switches`, () => {
-        deepEqual(
-            nodehun.suggestSync('cloor'),
-            ['color', 'floor', 'Clorox', 'clamor', 'Clotho', 'cloy']
-        )
+        const suggestions: Array<string> = nodehun.suggestSync('cloor')
+        
+        strictEqual(suggestions.includes('color'), true)
     });
 
     it(`should suggest insertions`, () => {
-        deepEqual(
-            nodehun.suggestSync('cokor'),
-            ['color', 'cork', 'Cork', 'cooker', 'cor', 'cooky', 'Coke']
-        )
+        const suggestions: Array<string> = nodehun.suggestSync('coor')
+        
+        strictEqual(suggestions.includes('color'), true)
     });
 
     it(`should not suggest alternatives marked with 'NOSUGGEST'`, () => {
-        deepEqual(
-            nodehun.suggestSync('bulshit'),
-            ['bullish', 'Bolshevist', 'bolshie']
-        )
+        const suggestions: Array<string> = nodehun.suggestSync('bulshit')
+
+        strictEqual(suggestions.includes('bullshit') || suggestions.includes('Bullshit'), false)
     });
 
     it(`should suggest based on replacements`, () => {
-        deepEqual(
-            nodehun.suggestSync('consize'),
-            ['con size', 'con-size', 'consignee', 'consider', 'consign', 'colonize', 'consist', 'concise']
-        )
+        const suggestions: Array<string> = nodehun.suggestSync('consize')
+        
+        strictEqual(suggestions.includes('concise'), true)
     });
 
     // it(`should not throw when suggesting for emojis ☀`, () => {
