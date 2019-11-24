@@ -61,6 +61,7 @@ Note: It's probably not a good idea to use `readFileSync` in production.
 	* <a href="#spell-suggestions">Spelling suggestions</a>
 	* <a href="#add-dictionary">Adding a dictionary</a>
 	* <a href="#add-word">Add a word</a>
+	* <a href="#add-word-with-affix">Add a word (with affix)</a>
 	* <a href="#remove-word">Remove a word</a>
 	* <a href="#stem">Word stem</a>
 	* <a href="#analyse">Word analysis</a>
@@ -147,7 +148,20 @@ await nodehun.suggest('colour') // => [ ...suggestions...]
 // because "colour" is not a defined word in the US English dictionary
 await nodehun.add('colour')
 await nodehun.suggest('colour') // => null
-// (since the word is considered correctly spelled now)
+// (since 'colour' is correct now)
+```
+
+Note: _colouring_ will still be considered incorrect. See the the `addWithAffix` example below.
+
+### <a id="add-word-with-affix"></a>Add Word (with affix)
+Like the method above, except it also applies the example word's affix definition to the new word.
+
+```js
+await nodehun.suggest('colouring') // => [ ...suggestions...]
+// because "colour" is not a defined word in the US English dictionary
+await nodehun.addWithAffix('colour', 'color')
+await nodehun.suggest('colouring') // => null
+// (since 'colouring' is correct now)
 ```
 
 ### <a id="remove-word"></a>Remove Word
