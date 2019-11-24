@@ -29,7 +29,7 @@ If you run into any build errors, make sure you satisfy the requirements for [`n
 ## Quick Start
 
 ```js
-import Nodehun from 'nodehun'
+import { Nodehun } from 'nodehun'
 
 const fs          = require('fs')
 const affix       = fs.readFileSync('path/to/*.aff')

@@ -1,4 +1,4 @@
-import Nodehun from 'nodehun'
+import { Nodehun } from 'nodehun'
 
 const fs = require('fs')
 const path = require('path')

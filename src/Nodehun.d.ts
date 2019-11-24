@@ -1,5 +1,5 @@
 declare module 'nodehun' {
-  export default class Nodehun {
+  export class Nodehun {
     constructor(affix: Buffer, dictionary: Buffer);
     
     spell(word: string): Promise<boolean>;
