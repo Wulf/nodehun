@@ -1,27 +1,45 @@
 language: node_js
 
-os:
-  - linux
+# os:
+#   - linux
+#   - osx
 
 node_js:
   - "node" # latest
-  - "9"
-  - "8"
-  - "7"
-  - "6"
+  # - "13" # latest
+  # - "12"
+  # - "11"
+  # - "10"
 
-addons:
-  # addons required for compiling native node modules
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-4.8
-      - g++-4.8-multilib
-      - gcc-multilib
+# addons:
+#   # addons required for compiling native node modules
+#   apt:
+#     sources:
+#       - ubuntu-toolchain-r-test
+#     packages:    
+#       - g++-6
+#       - g++-6-multilib
+#       - gcc-multilib
 
-env:
-  - CXX=g++-4.8
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+    - os: osx
+      osx_image: xcode8
+      env:
+        - MATRIX_EVAL="brew install gcc6 && CC=gcc-6 && CXX=g++-6"
+
+# env:
+#   - CXX=g++-6
 
 script:
   - npm install -g node-gyp
