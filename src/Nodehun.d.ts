@@ -1,6 +1,7 @@
 declare module 'nodehun' {
   export class Nodehun {
-    constructor(affix: Buffer, dictionary: Buffer);
+    //constructor(affix: Buffer, dictionary: Buffer);
+    constructor(affix: string, dictionary: string);
     
     spell(word: string): Promise<boolean>;
     spellSync(word: string): boolean;
@@ -17,8 +18,10 @@ declare module 'nodehun' {
     generate(word: string, example: string): Promise<string[]>;
     generateSync(word: string, example: string): string[];
   
-    addDictionary(dictionary: Buffer): Promise<void>;
-    addDictionarySync(dictionary: Buffer): void;
+    //addDictionary(dictionary: Buffer): Promise<void>;
+    addDictionary(dictionary: string): Promise<void>;
+   // addDictionarySync(dictionary: Buffer): void;
+    addDictionarySync(dictionary: string): void;
     
     add(word: string): Promise<void>;
     addSync(word: string): void;
