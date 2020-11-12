@@ -6,7 +6,8 @@
       "include_dirs": ["<!@(node -p \"require('node-addon-api').include\")"],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")",
-        "./hunspell/binding.gyp:hunspell"
+        #"./hunspell/binding.gyp:hunspell"
+        "./src/binding.gyp:hunspell"
       ],
       "defines": [ "NAPI_DISABLE_CPP_EXCEPTIONS" ],
       # set standard to C++ 17

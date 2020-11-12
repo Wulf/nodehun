@@ -68,7 +68,7 @@ Nodehun::Nodehun(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Nodehun>(inf
   std::string dictionary = info[1].ToString();
 
   //context = new HunspellContext(new Hunspell(affixBuffer.Data(), dictionaryBuffer.Data(), NULL, true));
-  context = new HunspellContext(new Hunspell(affix.c_str(), dictionary.c_str(), NULL, true));
+  context = new HunspellContext(new Hunspell(affix.c_str(), dictionary.c_str(), NULL));
 };
 
 Nodehun::~Nodehun() {
@@ -659,8 +659,10 @@ Napi::Value Nodehun::getWordCharactersUTF16(const Napi::CallbackInfo& info) {
     return error.Value();
   }
 
-  int length = 0;
-  unsigned short* chars = this->context->instance->get_wordchars_utf16(&length);
+  //int length = 0;
+  //unsigned short* chars = this->context->instance->get_wordchars_utf16(&length);
+  std::vector<w_char> vec_wordchars = this->context->instance->get_wordchars_utf16();
+  const w_char* chars = vec_wordchars.data();
 
   if (chars == NULL) {
     return env.Undefined();
