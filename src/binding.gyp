@@ -67,18 +67,6 @@
 		'hunspell/src/hunspell/suggestmgr.cxx',
 		'hunspell/src/hunspell/suggestmgr.hxx',
 		'hunspell/src/hunspell/w_char.hxx'
-	    ],
-	    'conditions': [
-		['OS=="win"', {
-	            'include_dirs': [ 'configs' ],
-	            'sources': [
-			'configs/config-win.h',
-	            ],
-	        }, {
-	            'sources': [
-			'configs/config-other.h',
-	            ],
-	        }],
 	    ]
 	}
     ]

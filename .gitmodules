@@ -1,7 +1,3 @@
-#[submodule "hunspell"]
-#	path = hunspell
-#	url = https://github.com/wulf/hunspell-distributed.git
-
 [submodule "src/hunspell"]
 	path = src/hunspell
 	url = https://github.com/hunspell/hunspell.git
