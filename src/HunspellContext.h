@@ -4,7 +4,6 @@
 #include <hunspell.hxx>
 #include <napi.h>
 #include <mutex>
-#include <shared_mutex>
 #include <uv.h>
 
 class HunspellContext {
