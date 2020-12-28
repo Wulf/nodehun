@@ -97,7 +97,7 @@ Note: It's probably not a good idea to use `readFileSync` in production.
 
 4. To continue using the old version, use:
 
-	npm install --save node@2.0.12
+	npm install --save nodehun@2.0.12
 
 	Works with Node v11 or lower, but some have reported compilation issues in v10 and v11.
 	If you plan to use this version, please refer to the [old](https://github.com/Wulf/nodehun/blob/77e4be9e2cde8805061387d4783357c45c582a04/readme.md) readme file.
