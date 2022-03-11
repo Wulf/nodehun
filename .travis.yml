@@ -5,18 +5,15 @@ language: node_js
 #   - osx
 
 node_js:
-  - "node" # latest
-  # - "13" # latest
-  # - "12"
-  # - "11"
-  # - "10"
+  - "node" # latest stable release
+  - "lts/*" # latest LTS release
 
 # addons:
 #   # addons required for compiling native node modules
 #   apt:
 #     sources:
 #       - ubuntu-toolchain-r-test
-#     packages:    
+#     packages:
 #       - g++-6
 #       - g++-6-multilib
 #       - gcc-multilib
