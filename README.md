@@ -67,6 +67,7 @@ Note: It's probably not a good idea to use `readFileSync` in production.
 	* <a href="#analyse">Word analysis</a>
 	* <a href="#generate">Word generation</a>
 3. <a href="#notes">Notes</a>
+	* <a href="#improving-performance">Improving performance</a>
 	* <a href="#notes-warning-on-synchronous-methods">A Warning on Synchronous Methods</a>
 	* <a href="#notes-open-office-dictionaries">A Note About Open Office Dictionaries</a>
 	* <a href="#notes-creating-dictionaries">A Note About Creating Dictionaries</a>
@@ -198,6 +199,43 @@ await nodehun.generate('told', 'run') // => [ 'tell' ]
 ```
 
 ## <a id="notes"></a>Notes
+
+### <a id="improving-performance"></a> Improving Performance
+
+If the native performance isn't fast enough for your workload, you can try using an LRU cache for your operations. The idea is to cache the results of the operation and only repeat the operations on cache misses.
+
+```js
+const LRUCache = require('lru-native2')
+
+var cache = new LRUCache({ maxElements: 1000 })
+
+async function suggestCached() {
+  let cachedResult = cache.get(word)
+  if (cachedResult) {
+    // cache hit
+    return cachedResult
+  } else {
+    // cache miss
+    let result = await nodehun.suggest(word)
+    cache.set(word, result)
+    return result
+  }
+}
+
+// ... example usage:
+
+const suggestions = await suggestCached('Wintre')
+// now 'wintre' results are cached
+
+// ... some time later...
+
+const suggestions = await suggestCached('Wintre')
+               // => this is fetched from the cache
+```
+
+Here are two LRU implementations you can consider:
+* [lru-native2](https://github.com/adzerk/node-lru-native)
+* [lru-cache](https://github.com/isaacs/node-lru-cache)
 
 ### <a id="notes-warning-on-synchronous-methods"></a>A Warning on Synchronous Methods
 There are synchronous versions of all the methods listed above, but they are not documented as they are only present for people who really know and understand what they are doing. I highly recommend looking at the C++ source code if you are going to use these methods in a production environment as the locks involved with them can create some counterintuitive situations. For example, if you were to remove a word synchronously while many different suggestion threads were working in the background the remove word method could take seconds to complete while it waits to take control of the read-write lock. This is obviously disastrous in a situation where you would be servicing many requests.
