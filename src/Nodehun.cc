@@ -111,8 +111,9 @@ Napi::Value Nodehun::addDictionarySync(const Napi::CallbackInfo& info) {
     return error.Value();
   } else {
     Napi::Buffer<char> dictionaryBuffer = info[0].As<Napi::Buffer<char>>();
-
-    context->instance->add_dic(dictionaryBuffer.Data());
+    
+    std::string dictionary(dictionaryBuffer.Data(), dictionaryBuffer.Length());
+    context->instance->add_dic(dictionary.c_str());
     
     return env.Undefined();
   }
@@ -135,7 +136,7 @@ Napi::Value Nodehun::addDictionary(const Napi::CallbackInfo& info) {
     AddDictionaryWorker* worker = new AddDictionaryWorker(
       context,
       deferred,
-      dictionaryBuffer.Data()
+      std::string(dictionaryBuffer.Data(), dictionaryBuffer.Length())
     );
 
     worker->Queue();
@@ -654,7 +655,7 @@ Napi::Value Nodehun::getWordCharactersUTF16(const Napi::CallbackInfo& info) {
   if (chars == NULL) {
     return env.Undefined();
   } else {
-    return Napi::String::New(env, ((char16_t*) chars));
+    return Napi::String::New(env, ((char16_t*) chars), (size_t)length);
   }
 }
 

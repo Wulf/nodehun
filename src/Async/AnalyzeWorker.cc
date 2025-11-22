@@ -8,7 +8,7 @@ class AnalyzeWorker : public Worker {
             HunspellContext* context,
             Napi::Promise::Deferred d,
             std::string word)
-        : Worker(context, d), word(word) {}
+        : Worker(context, d), word(std::move(word)) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
