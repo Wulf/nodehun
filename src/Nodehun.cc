@@ -631,12 +631,16 @@ Napi::Value Nodehun::getWordCharacters(const Napi::CallbackInfo& info) {
     return error.Value();
   }
 
+  context->lockRead();
   const char* wordCharacters = this->context->instance->get_wordchars();
   
   if (wordCharacters == NULL) {
+    context->unlockRead();
     return env.Undefined();
   } else {
-    return Napi::String::New(env, wordCharacters);
+    std::string result(wordCharacters);
+    context->unlockRead();
+    return Napi::String::New(env, result);
   }
 }
 
@@ -649,13 +653,17 @@ Napi::Value Nodehun::getWordCharactersUTF16(const Napi::CallbackInfo& info) {
     return error.Value();
   }
 
+  context->lockRead();
   int length = 0;
   unsigned short* chars = this->context->instance->get_wordchars_utf16(&length);
 
   if (chars == NULL) {
+    context->unlockRead();
     return env.Undefined();
   } else {
-    return Napi::String::New(env, ((char16_t*) chars), (size_t)length);
+    std::u16string result((char16_t*)chars, (size_t)length);
+    context->unlockRead();
+    return Napi::String::New(env, result);
   }
 }
 

@@ -1,5 +1,6 @@
 #include <napi.h>
 #include <hunspell.hxx>
+#include <string>
 #include "Worker.cc"
 
 class RemoveWorker : public Worker {
