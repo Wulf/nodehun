@@ -57,8 +57,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ["lts/*", "node"]
-        arch: ["x64", "x86"]
+        node-version: ["lts/*"]
+        arch: ["x64", "arm64"]
+        include:
+          - node-version: "22"
+            arch: "x86"
 
     steps:
       - name: Configure git line endings
