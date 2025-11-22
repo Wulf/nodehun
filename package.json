@@ -37,8 +37,8 @@
     "typescript": "^3.7.2"
   },
   "scripts": {
-    "start": "nodemon -e ts,js,cc,h,gyp -x \"npm run build && npm run test\"",
-    "start-test": "nodemon -e ts,js -x \"npm run test\"",
+    "start": "npx nodemon -e ts,js,cc,h,gyp -x \"npm run build && npm run test\"",
+    "start-test": "npx nodemon -e ts,js -x \"npm run test\"",
     "build": "node-gyp rebuild -j 8",
     "test": "ts-node --transpile-only node_modules/mocha/bin/mocha ./test/*.spec.ts",
     "performance-test": "echo \"This command only works with node version 11 or lower!\" && npm i chart.js@2.9.2 chartjs-node@1.7.1 nodehun@2.0.12 && ts-node test/performance/performance.ts"

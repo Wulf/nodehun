@@ -1,0 +1,93 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-linux-macos:
+    name: Test on ${{ matrix.os }} with Node ${{ matrix.node-version }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: ["lts/*", "node"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Install dependencies
+        run: |
+          npm install
+
+      - name: Display versions
+        run: |
+          node --version
+          npm --version
+          python --version || python3 --version
+
+      - name: Run tests
+        run: npm test
+
+  test-windows:
+    name: Test on Windows with Node ${{ matrix.node-version }} (${{ matrix.arch }})
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: ["lts/*", "node"]
+        arch: ["x64", "x86"]
+
+    steps:
+      - name: Configure git line endings
+        run: git config --global core.autocrlf input
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          architecture: ${{ matrix.arch }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Display versions
+        run: |
+          node --version
+          npm --version
+          python --version
+
+      - name: Run tests
+        run: npm test
