@@ -9,7 +9,7 @@ class GenerateWorker : public Worker {
             Napi::Promise::Deferred d,
             std::string word,
             std::string example)
-        : Worker(context, d), word(word), example(example) {}
+        : Worker(context, d), word(std::move(word)), example(std::move(example)) {}
 
     void Execute() {
         // Worker thread; don't use N-API here
