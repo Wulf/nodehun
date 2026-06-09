@@ -65,7 +65,9 @@ Nodehun::Nodehun(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Nodehun>(inf
   Napi::Buffer<char> affixBuffer = info[0].As<Napi::Buffer<char>>();
   Napi::Buffer<char> dictionaryBuffer = info[1].As<Napi::Buffer<char>>();
 
-  context = new HunspellContext(new Hunspell(affixBuffer.Data(), dictionaryBuffer.Data(), NULL, true));
+  std::string affixStr(affixBuffer.Data(), affixBuffer.Length());
+  std::string dictionaryStr(dictionaryBuffer.Data(), dictionaryBuffer.Length());
+  context = new HunspellContext(new Hunspell(affixStr.c_str(), dictionaryStr.c_str(), NULL, true));
 };
 
 Nodehun::~Nodehun() {
