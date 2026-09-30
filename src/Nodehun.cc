@@ -58,9 +58,24 @@ Napi::Object Nodehun::Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
-Nodehun::Nodehun(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Nodehun>(info) {
+Nodehun::Nodehun(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Nodehun>(info), context(NULL) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
+
+  if (info.Length() != 2) {
+    Napi::Error::New(env, INVALID_NUMBER_OF_ARGUMENTS).ThrowAsJavaScriptException();
+    return;
+  }
+
+  if (!info[0].IsBuffer()) {
+    Napi::Error::New(env, INVALID_FIRST_ARGUMENT).ThrowAsJavaScriptException();
+    return;
+  }
+
+  if (!info[1].IsBuffer()) {
+    Napi::Error::New(env, INVALID_SECOND_ARGUMENT).ThrowAsJavaScriptException();
+    return;
+  }
 
   Napi::Buffer<char> affixBuffer = info[0].As<Napi::Buffer<char>>();
   Napi::Buffer<char> dictionaryBuffer = info[1].As<Napi::Buffer<char>>();
