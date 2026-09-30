@@ -15,10 +15,12 @@ int StrMgr::fail(const char * err, const char * par) {
 StrMgr::StrMgr(const char * str, const char * key) {
   linenum = 0;
   index = 0;
+  st = NULL;
   size = strlen(str);
-  if(size > 0)
+  if(size > 0) {
     st = strdup(str);
-  if (!st) fail(MSG_OPEN, "Buffer allocation failed in StrMgr.");
+    if (!st) fail(MSG_OPEN, "Buffer allocation failed in StrMgr.");
+  }
 }
 
 StrMgr::~StrMgr()
